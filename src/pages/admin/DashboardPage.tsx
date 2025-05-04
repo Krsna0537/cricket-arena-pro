@@ -1,26 +1,43 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import TournamentForm from '@/components/tournaments/TournamentForm';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const DashboardPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { tournaments, addTournament } = useApp();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Future integration with Supabase for fetching tournaments
+    setIsLoading(false);
+  }, []);
 
   const handleCreateTournament = (data: any) => {
     addTournament({
       ...data,
-      creatorId: 'user1', // In a real app, this would be the logged-in user ID
+      creatorId: user?.id || 'unknown', // Using the logged-in user ID
       status: 'upcoming'
     });
     setShowCreateForm(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p>Loading tournaments...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

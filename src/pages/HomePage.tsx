@@ -4,8 +4,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trophy, ArrowRight, Users, TrendingUp, Calendar, BarChart2, Share } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const HomePage = () => {
+  const { user, userRole } = useAuth();
+
   return (
     <div className="min-h-screen">
       <div className="relative overflow-hidden bg-cricket-navy text-white py-16 md:py-24">
@@ -21,17 +24,44 @@ const HomePage = () => {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Link to="/dashboard">
-                  <Button className="bg-cricket-accent text-black hover:bg-cricket-accent/90">
-                    Create Tournament
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/join">
-                  <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white/20">
-                    Join Tournament
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {userRole === 'creator' ? (
+                      <Link to="/dashboard">
+                        <Button className="bg-cricket-accent text-black hover:bg-cricket-accent/90">
+                          Dashboard
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link to="/join">
+                        <Button className="bg-cricket-accent text-black hover:bg-cricket-accent/90">
+                          Join Tournament
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    <Link to="/profile">
+                      <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white/20">
+                        Your Profile
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth/register">
+                      <Button className="bg-cricket-accent text-black hover:bg-cricket-accent/90">
+                        Sign Up
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link to="/auth/login">
+                      <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white/20">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-center">
