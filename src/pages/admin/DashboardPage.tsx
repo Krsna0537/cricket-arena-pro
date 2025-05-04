@@ -91,7 +91,7 @@ const DashboardPage = () => {
             </div>
             <div className="text-center p-4 bg-white rounded-lg shadow-sm">
               <p className="text-3xl font-bold">
-                {tournaments.filter(t => t.status === 'live').length}
+                {tournaments.filter(t => t.status === 'ongoing').length}
               </p>
               <p className="text-sm text-gray-500">Live Tournaments</p>
             </div>
