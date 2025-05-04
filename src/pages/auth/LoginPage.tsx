@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Trophy } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -33,7 +34,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const LoginPage = () => {
-  const { signIn, user } = useAuth();
+  const { signIn, user, userRole } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -44,11 +46,20 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (data: FormData) => {
-    await signIn(data.email, data.password);
+    setIsSubmitting(true);
+    try {
+      await signIn(data.email, data.password);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect creators to dashboard, viewers to home
+    if (userRole === 'creator') {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -95,9 +106,14 @@ const LoginPage = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-cricket-navy hover:bg-cricket-navy-light"
-                disabled={form.formState.isSubmitting}
+                disabled={isSubmitting}
               >
-                {form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : 'Sign in'}
               </Button>
             </form>
           </Form>

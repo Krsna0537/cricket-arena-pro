@@ -57,10 +57,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .single();
 
-      if (roleError) throw roleError;
+      if (roleError && roleError.code !== 'PGRST116') throw roleError;
 
       setProfile(profileData);
-      setUserRole(roleData.role);
+      setUserRole(roleData?.role || 'viewer');
     } catch (error: any) {
       console.error('Error fetching user data:', error.message);
     }
@@ -145,6 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
+      
+      navigate('/');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -202,17 +204,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update user role (admin function)
+  // Update user role
   const updateUserRole = async (role: UserRole) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      // Check if a role entry exists
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .update({ role })
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role })
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role });
+          
+        if (error) throw error;
+      }
 
       setUserRole(role);
       
@@ -221,11 +240,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Your role has been updated to ${role}.`,
       });
     } catch (error: any) {
+      console.error('Error updating role:', error);
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
+      throw error;
     }
   };
 
@@ -265,10 +286,12 @@ export const ProtectedRoute: React.FC<{
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth/login', { replace: true });
-    } else if (!loading && user && allowedRoles && !allowedRoles.includes(userRole as UserRole)) {
-      navigate('/not-authorized', { replace: true });
+    if (!loading) {
+      if (!user) {
+        navigate('/auth/login', { replace: true });
+      } else if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+        navigate('/not-authorized', { replace: true });
+      }
     }
   }, [user, userRole, loading, allowedRoles, navigate]);
 
@@ -280,7 +303,7 @@ export const ProtectedRoute: React.FC<{
     return null;
   }
 
-  if (allowedRoles && !allowedRoles.includes(userRole as UserRole)) {
+  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
     return null;
   }
 

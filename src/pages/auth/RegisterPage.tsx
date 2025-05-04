@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Trophy } from 'lucide-react';
+import { Trophy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({
@@ -40,6 +40,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const RegisterPage = () => {
   const { signUp, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -53,11 +54,16 @@ const RegisterPage = () => {
   });
 
   const onSubmit = async (data: FormData) => {
-    await signUp(data.email, data.password, data.firstName, data.lastName);
+    setIsSubmitting(true);
+    try {
+      await signUp(data.email, data.password, data.firstName, data.lastName);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -145,9 +151,14 @@ const RegisterPage = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-cricket-navy hover:bg-cricket-navy-light"
-                disabled={form.formState.isSubmitting}
+                disabled={isSubmitting}
               >
-                {form.formState.isSubmitting ? 'Registering...' : 'Register'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Registering...
+                  </>
+                ) : 'Register'}
               </Button>
             </form>
           </Form>
