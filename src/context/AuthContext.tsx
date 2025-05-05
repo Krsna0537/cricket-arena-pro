@@ -102,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign up a new user
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     try {
-      // Register the user
+      // Register the user - include role in metadata
+      // The database trigger will handle creating the profile and role
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
@@ -110,21 +111,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: role // Include role in metadata
+            role: role
           }
         }
       });
 
       if (error) throw error;
       
-      // If successful registration, insert user role explicitly
-      if (data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: data.user.id, role });
-          
-        if (roleError) throw roleError;
-      }
+      // No need to manually insert role - the database trigger will handle this
       
       toast({
         title: 'Account created!',
