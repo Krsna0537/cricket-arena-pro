@@ -24,7 +24,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   first_name: z.string().min(2, { message: 'First name must be at least 2 characters' }),
@@ -35,9 +34,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const ProfilePage = () => {
-  const { profile, updateProfile, userRole, updateUserRole } = useAuth();
+  const { profile, updateProfile, userRole } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [isChangingRole, setIsChangingRole] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -52,25 +50,6 @@ const ProfilePage = () => {
   const onSubmit = async (data: FormData) => {
     await updateProfile(data);
     setIsEditing(false);
-  };
-
-  const handleRoleChange = async () => {
-    setIsChangingRole(true);
-    try {
-      await updateUserRole('creator');
-      toast({
-        title: "Role updated",
-        description: "You are now a creator and can create tournaments.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update role.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsChangingRole(false);
-    }
   };
 
   const getInitials = () => {
@@ -199,48 +178,6 @@ const ProfilePage = () => {
           </Card>
         </div>
       </div>
-
-      {userRole === 'viewer' && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Account Permissions</CardTitle>
-            <CardDescription>
-              Change your account role to access more features
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium">Current Role: Viewer</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  As a viewer, you can join tournaments and view their details.
-                </p>
-              </div>
-              
-              <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
-                <h3 className="font-medium text-amber-800">Become a Creator</h3>
-                <p className="text-sm text-amber-700 mt-1">
-                  Creators can create and manage tournaments, teams, and matches.
-                </p>
-                <Button 
-                  onClick={handleRoleChange}
-                  className="mt-3 bg-amber-600 hover:bg-amber-700"
-                  disabled={isChangingRole}
-                >
-                  {isChangingRole ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Change to Creator'
-                  )}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

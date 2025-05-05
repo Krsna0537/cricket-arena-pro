@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Trophy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -31,6 +32,9 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(6, { message: 'Confirm your password' }),
+  role: z.enum(['viewer', 'creator'], {
+    required_error: "Please select a role",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -50,13 +54,14 @@ const RegisterPage = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      role: 'viewer',
     },
   });
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      await signUp(data.email, data.password, data.firstName, data.lastName);
+      await signUp(data.email, data.password, data.firstName, data.lastName, data.role);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,6 +148,40 @@ const RegisterPage = () => {
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="******" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Select your role</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="viewer" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Viewer - Join tournaments and view their details
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="creator" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Creator - Create and manage tournaments, teams, and matches
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

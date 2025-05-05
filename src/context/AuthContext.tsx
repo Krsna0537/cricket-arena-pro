@@ -20,11 +20,10 @@ type AuthContextType = {
   profile: Profile | null;
   userRole: UserRole | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
-  updateUserRole: (role: UserRole) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,20 +100,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Sign up a new user
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      // Register the user
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: firstName,
-            last_name: lastName
+            last_name: lastName,
+            role: role // Include role in metadata
           }
         }
       });
 
       if (error) throw error;
+      
+      // If successful registration, insert user role explicitly
+      if (data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: data.user.id, role });
+          
+        if (roleError) throw roleError;
+      }
       
       toast({
         title: 'Account created!',
@@ -204,52 +214,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update user role
-  const updateUserRole = async (role: UserRole) => {
-    if (!user) return;
-
-    try {
-      // Check if a role entry exists
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingRole) {
-        // Update existing role
-        const { error } = await supabase
-          .from('user_roles')
-          .update({ role })
-          .eq('user_id', user.id);
-        
-        if (error) throw error;
-      } else {
-        // Insert new role
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({ user_id: user.id, role });
-          
-        if (error) throw error;
-      }
-
-      setUserRole(role);
-      
-      toast({
-        title: 'Role updated',
-        description: `Your role has been updated to ${role}.`,
-      });
-    } catch (error: any) {
-      console.error('Error updating role:', error);
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -262,7 +226,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn,
         signOut,
         updateProfile,
-        updateUserRole,
       }}
     >
       {children}

@@ -17,7 +17,7 @@ const NotAuthorizedPage = () => {
       <p className="text-gray-600 text-center mb-6 max-w-md">
         You don't have permission to access this page. 
         {userRole === 'viewer' && (
-          " This page requires creator privileges. You can update your role in your profile settings."
+          " This page requires creator privileges."
         )}
       </p>
       <div className="flex flex-col sm:flex-row gap-4">
@@ -27,13 +27,6 @@ const NotAuthorizedPage = () => {
         <Button variant="outline" asChild>
           <Link to="/profile">View Your Profile</Link>
         </Button>
-        {userRole === 'viewer' && (
-          <Button variant="secondary" asChild>
-            <Link to="/profile" className="text-amber-700 border-amber-500">
-              Upgrade to Creator
-            </Link>
-          </Button>
-        )}
       </div>
     </div>
   );
