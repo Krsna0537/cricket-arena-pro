@@ -506,7 +506,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         is_striker: event.isStriker,
         wicket_type: event.wicketType,
         fielder_id: event.fielderId,
-        extras_type: event.extrasType
+        extras_type: event.extrasType,
+        ball_number: (event.over - 1) * 6 + event.ball // Calculate the sequential ball number
       };
 
       const { data, error } = await supabase
@@ -532,7 +533,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bowlerId: data.bowler_id,
         isStriker: data.is_striker,
         nonStrikerId: data.non_striker_id,
-        wicketType: data.wicket_type,
+        wicketType: data.wicket_type as WicketType | undefined,
         fielderId: data.fielder_id,
         extrasType: data.extras_type,
         createdAt: data.created_at
@@ -570,7 +571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bowlerId: row.bowler_id,
         isStriker: row.is_striker,
         nonStrikerId: row.non_striker_id,
-        wicketType: row.wicket_type,
+        wicketType: row.wicket_type as WicketType | undefined,
         fielderId: row.fielder_id,
         extrasType: row.extras_type,
         createdAt: row.created_at
