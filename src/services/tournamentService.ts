@@ -1,5 +1,4 @@
-
-import { Tournament, Team, Player, Match, MatchStatus } from '@/types';
+import { Tournament, Team, Player, Match, MatchStatus, TournamentType } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchTournaments(): Promise<Tournament[]> {
@@ -17,7 +16,7 @@ export async function fetchTournaments(): Promise<Tournament[]> {
   const formattedTournaments = (data ?? []).map(row => ({
     id: row.id,
     name: row.name,
-    type: row.type,
+    type: row.type as TournamentType, // Explicitly cast to TournamentType
     startDate: row.start_date,
     endDate: row.end_date,
     creatorId: row.creator_id,
@@ -45,7 +44,7 @@ export async function fetchTournaments(): Promise<Tournament[]> {
       team2Id: match.team2_id,
       date: match.date,
       venue: match.venue,
-      status: match.status,
+      status: match.status as MatchStatus, // Explicitly cast to MatchStatus
       result: match.result ?? undefined,
       scoreTeam1: match.scoreTeam1 ? {
         runs: match.scoreTeam1.runs || 0,
@@ -60,7 +59,7 @@ export async function fetchTournaments(): Promise<Tournament[]> {
     })),
   }));
 
-  return formattedTournaments;
+  return formattedTournaments as Tournament[];
 }
 
 export function generateAccessCode(length = 6): string {

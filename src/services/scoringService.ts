@@ -1,6 +1,50 @@
-
 import { BallEvent, InningsSummary, BallEventType, WicketType } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+
+// Define a separate interface for ball event database rows to avoid recursive typing
+interface BallEventRow {
+  id: string;
+  match_id: string;
+  team_id: string;
+  inning: number;
+  over: number;
+  ball: number;
+  event_type: string;
+  runs: number;
+  extras: number;
+  batsman_id: string;
+  bowler_id: string;
+  is_striker: boolean;
+  non_striker_id?: string;
+  wicket_type?: string;
+  fielder_id?: string;
+  extras_type?: string;
+  created_at: string;
+  ball_number: number;
+}
+
+// Explicitly map from row type to BallEvent to break the recursive type chain
+function mapRowToBallEvent(row: BallEventRow): BallEvent {
+  return {
+    id: row.id,
+    matchId: row.match_id,
+    teamId: row.team_id,
+    inning: row.inning,
+    over: row.over,
+    ball: row.ball,
+    eventType: row.event_type as BallEventType,
+    runs: row.runs,
+    extras: row.extras,
+    batsmanId: row.batsman_id,
+    bowlerId: row.bowler_id,
+    isStriker: row.is_striker,
+    nonStrikerId: row.non_striker_id,
+    wicketType: row.wicket_type as WicketType | undefined,
+    fielderId: row.fielder_id,
+    extrasType: row.extras_type,
+    createdAt: row.created_at
+  };
+}
 
 export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): Promise<BallEvent> {
   try {
@@ -35,26 +79,8 @@ export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): 
     
     if (error) throw error;
     
-    // Map DB row to BallEvent
-    return {
-      id: data.id,
-      matchId: data.match_id,
-      teamId: data.team_id,
-      inning: data.inning,
-      over: data.over,
-      ball: data.ball,
-      eventType: data.event_type as BallEventType,
-      runs: data.runs,
-      extras: data.extras,
-      batsmanId: data.batsman_id,
-      bowlerId: data.bowler_id,
-      isStriker: data.is_striker,
-      nonStrikerId: data.non_striker_id,
-      wicketType: data.wicket_type as WicketType | undefined,
-      fielderId: data.fielder_id,
-      extrasType: data.extras_type,
-      createdAt: data.created_at
-    };
+    // Map DB row to BallEvent using our mapping function
+    return mapRowToBallEvent(data as BallEventRow);
   } catch (error) {
     throw error;
   }
@@ -72,26 +98,8 @@ export async function fetchBallEvents(matchId: string, inning: number): Promise<
       
     if (error) throw error;
     
-    // Map DB rows to BallEvent[]
-    return (data as any[]).map(row => ({
-      id: row.id,
-      matchId: row.match_id,
-      teamId: row.team_id,
-      inning: row.inning,
-      over: row.over,
-      ball: row.ball,
-      eventType: row.event_type as BallEventType,
-      runs: row.runs,
-      extras: row.extras,
-      batsmanId: row.batsman_id,
-      bowlerId: row.bowler_id,
-      isStriker: row.is_striker,
-      nonStrikerId: row.non_striker_id,
-      wicketType: row.wicket_type as WicketType | undefined,
-      fielderId: row.fielder_id,
-      extrasType: row.extras_type,
-      createdAt: row.created_at
-    })) as BallEvent[];
+    // Use our mapping function to convert rows to BallEvents
+    return (data as BallEventRow[]).map(mapRowToBallEvent);
   } catch (error) {
     throw error;
   }
