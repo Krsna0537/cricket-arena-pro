@@ -130,6 +130,20 @@ export async function upsertInningsSummary(summary: InningsSummary): Promise<voi
   }
 }
 
+// Define the interface for innings summary database rows
+interface InningsSummaryRow {
+  match_id: string;
+  total_runs: number;
+  wickets: number;
+  overs: number;
+  extras?: number;
+  target?: number;
+  batting_team_id?: string;
+  created_at?: string;
+  id?: string;
+  updated_at?: string;
+}
+
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
     const { data, error } = await supabase
@@ -142,24 +156,13 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
     
-    // Define a concrete type for the database row to avoid infinite type instantiation
-    interface InningsSummaryRow {
-      match_id: string;
-      inning: number;
-      total_runs: number;
-      wickets: number;
-      overs: number;
-      extras?: number;
-      target?: number;
-    }
-    
     // Explicitly cast the data to our row type
     const row = data as InningsSummaryRow;
     
     // Map the database row to our domain type
     return {
       matchId: row.match_id,
-      inning: row.inning,
+      inning: inning, // Use the inning parameter we passed in
       runs: row.total_runs,
       wickets: row.wickets,
       overs: row.overs,
@@ -171,13 +174,13 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
   }
 }
 
+// Define a type for the target score row
+interface TargetScoreRow {
+  target_runs: number;
+}
+
 export async function fetchTargetScore(matchId: string): Promise<number | null> {
   try {
-    // Define a type for the target score row
-    interface TargetScoreRow {
-      target_runs: number;
-    }
-    
     const { data, error } = await supabase
       .from('target_scores')
       .select('target_runs')
