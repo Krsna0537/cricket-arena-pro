@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -698,7 +699,28 @@ export const useApp = () => {
   return context;
 };
 
-// Real-time ball event subscription hook with explicit typing to prevent infinite type instantiation
+// Define a type for database row responses to avoid type recursion
+interface BallEventRow {
+  id: string;
+  match_id: string;
+  team_id: string;
+  inning: number;
+  over: number;
+  ball: number;
+  event_type: string;
+  runs: number;
+  extras: number;
+  batsman_id: string;
+  bowler_id: string;
+  is_striker: boolean;
+  non_striker_id?: string;
+  wicket_type?: string;
+  fielder_id?: string;
+  extras_type?: string;
+  created_at: string;
+}
+
+// Real-time ball event subscription hook with explicit type definitions to prevent infinite type instantiation
 export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] {
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { toast } = useToast();
@@ -720,9 +742,9 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
           
         if (error) throw error;
         
-        // Map DB rows to BallEvent[]
+        // Map DB rows to BallEvent[] with explicit typing
         if (mounted) {
-          const mappedEvents: BallEvent[] = (data || []).map(row => ({
+          const mappedEvents: BallEvent[] = (data || []).map((row: BallEventRow) => ({
             id: row.id,
             matchId: row.match_id,
             teamId: row.team_id,
@@ -760,7 +782,7 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'ball_by_ball', filter: `match_id=eq.${matchId}` },
-        (payload: any) => {
+        (payload: { new: BallEventRow }) => {
           if (payload.new && payload.new.inning === inning && mounted) {
             const newEvent: BallEvent = {
               id: payload.new.id,
