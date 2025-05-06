@@ -741,7 +741,7 @@ export function useLiveBallEvents(matchId: string, inning: number) {
               createdAt: payload.new.created_at
             };
             
-            setEvents((prev) => [...prev, newEvent]);
+            setEvents(prev => [...prev, newEvent]);
           }
         }
       )
