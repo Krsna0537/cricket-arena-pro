@@ -698,8 +698,8 @@ export const useApp = () => {
   return context;
 };
 
-// Real-time ball event subscription hook - fixed to prevent infinite type instantiation
-export function useLiveBallEvents(matchId: string, inning: number) {
+// Real-time ball event subscription hook with explicit typing to prevent infinite type instantiation
+export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] {
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { toast } = useToast();
   const supabaseClient = useRef(supabase);
@@ -722,7 +722,7 @@ export function useLiveBallEvents(matchId: string, inning: number) {
         
         // Map DB rows to BallEvent[]
         if (mounted) {
-          setEvents((data as any[]).map(row => ({
+          const mappedEvents: BallEvent[] = (data || []).map(row => ({
             id: row.id,
             matchId: row.match_id,
             teamId: row.team_id,
@@ -740,10 +740,15 @@ export function useLiveBallEvents(matchId: string, inning: number) {
             fielderId: row.fielder_id,
             extrasType: row.extras_type,
             createdAt: row.created_at
-          })));
+          }));
+          setEvents(mappedEvents);
         }
       } catch (error: any) {
-        toast({ title: 'Error', description: 'Failed to fetch ball events: ' + error.message, variant: 'destructive' });
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to fetch ball events: ' + error.message, 
+          variant: 'destructive' 
+        });
       }
     };
     
