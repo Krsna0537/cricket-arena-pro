@@ -435,9 +435,9 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       
       // Determine ball number
       const legalCount = events.filter(e => e.eventType !== 'wide' && e.eventType !== 'no-ball').length;
-      const nextLegal = extrasType === 'wide' || extrasType === 'no-ball' ? legalCount : legalCount + 1;
+      const nextLegal = (extrasType === 'wide' || extrasType === 'no-ball') ? legalCount : legalCount + 1;
       const overNum = Math.floor((nextLegal - 1) / 6) + 1;
-      const ballNum = extrasType === 'wide' || extrasType === 'no-ball' ? (legalCount % 6) + 1 : ((nextLegal - 1) % 6) + 1;
+      const ballNum = (extrasType === 'wide' || extrasType === 'no-ball') ? (legalCount % 6) + 1 : ((nextLegal - 1) % 6) + 1;
       
       // Record the extras
       await addBallEvent({

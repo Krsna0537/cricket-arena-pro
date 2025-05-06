@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -512,7 +511,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const { data, error } = await supabase
         .from('ball_by_ball')
-        .insert([ballEventData])
+        .insert(ballEventData)
         .select()
         .single();
       
@@ -596,7 +595,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             extras: summary.extras,
             target: summary.target
           }
-        ]);
+        ], { onConflict: 'match_id,inning' });
         
       if (error) throw error;
       
@@ -621,7 +620,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       return {
         matchId: data.match_id,
-        inning: data.inning,
+        inning: data.inning || inning,
         runs: data.total_runs,
         wickets: data.wickets,
         overs: data.overs,

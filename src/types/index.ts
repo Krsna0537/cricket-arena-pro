@@ -1,4 +1,5 @@
 
+
 export type TournamentType = 'league' | 'knockout';
 
 export type PlayerRole = 'batsman' | 'bowler' | 'all-rounder' | 'keeper';
@@ -142,3 +143,4 @@ export interface TargetScore {
   inningsNumber: number;
   targetRuns: number;
 }
+
