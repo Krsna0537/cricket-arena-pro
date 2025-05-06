@@ -146,28 +146,31 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    const { data, error } = await supabase
+    // Use a direct type annotation for the Supabase query to prevent TypeScript from
+    // trying to infer complex nested types that lead to infinite type instantiation
+    type QueryResultType = { data: InningsSummaryRow | null, error: any };
+    
+    const result: QueryResultType = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
       .eq('inning', inning)
       .maybeSingle();
       
+    const { data, error } = result;
+      
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
     
-    // Explicitly cast the data to our row type
-    const row = data as InningsSummaryRow;
-    
     // Map the database row to our domain type
     return {
-      matchId: row.match_id,
+      matchId: data.match_id,
       inning: inning, // Use the inning parameter we passed in
-      runs: row.total_runs,
-      wickets: row.wickets,
-      overs: row.overs,
-      extras: row.extras,
-      target: row.target
+      runs: data.total_runs,
+      wickets: data.wickets,
+      overs: data.overs,
+      extras: data.extras,
+      target: data.target
     };
   } catch (error) {
     throw error;
@@ -181,19 +184,22 @@ interface TargetScoreRow {
 
 export async function fetchTargetScore(matchId: string): Promise<number | null> {
   try {
-    const { data, error } = await supabase
+    // Use a direct type annotation for the Supabase query
+    type TargetQueryResultType = { data: TargetScoreRow | null, error: any };
+    
+    const result: TargetQueryResultType = await supabase
       .from('target_scores')
       .select('target_runs')
       .eq('match_id', matchId)
       .eq('innings_number', 1)
       .maybeSingle();
+    
+    const { data, error } = result;
       
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
     
-    // Explicitly cast to our row type
-    const row = data as TargetScoreRow;
-    return row.target_runs;
+    return data.target_runs;
   } catch (error) {
     throw error;
   }
