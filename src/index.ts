@@ -3,4 +3,4 @@
 export * from './context/AppContext';
 export * from './hooks/useLiveBallEvents';
 export * from './services/tournamentService';
-export * from './services/scoringService';
+export * from './services/scoring'; // Update to use the new path
