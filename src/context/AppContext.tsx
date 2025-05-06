@@ -702,7 +702,6 @@ export const useApp = () => {
 export function useLiveBallEvents(matchId: string, inning: number) {
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { fetchBallEvents } = useApp();
-  const { toast } = useToast();
   const supabaseClient = useRef(supabase);
 
   useEffect(() => {
@@ -715,14 +714,14 @@ export function useLiveBallEvents(matchId: string, inning: number) {
     });
     
     // Subscribe to new events
-    subscription = supabaseClient.current
+    const channel = supabaseClient.current
       .channel('ball-by-ball-live')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'ball_by_ball', filter: `match_id=eq.${matchId}` },
-        (payload) => {
+        (payload: any) => {
           if (payload.new && payload.new.inning === inning && mounted) {
-            setEvents((prev) => [...prev, {
+            const newEvent: BallEvent = {
               id: payload.new.id,
               matchId: payload.new.match_id,
               teamId: payload.new.team_id,
@@ -736,15 +735,19 @@ export function useLiveBallEvents(matchId: string, inning: number) {
               bowlerId: payload.new.bowler_id,
               isStriker: payload.new.is_striker,
               nonStrikerId: payload.new.non_striker_id,
-              wicketType: payload.new.wicket_type,
+              wicketType: payload.new.wicket_type as WicketType | undefined,
               fielderId: payload.new.fielder_id,
               extrasType: payload.new.extras_type,
               createdAt: payload.new.created_at
-            }]);
+            };
+            
+            setEvents((prev) => [...prev, newEvent]);
           }
         }
       )
       .subscribe();
+    
+    subscription = channel;
     
     return () => {
       mounted = false;

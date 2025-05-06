@@ -17,7 +17,7 @@ export const TargetChase: React.FC<TargetChaseProps> = ({ inning, targetScore, s
     const ballsRemaining = 120 - (summary.completeOvers * 6 + summary.ballsInCurrentOver);
     
     const requiredRunRate = ballsRemaining > 0 ? (runsNeeded / (ballsRemaining / 6)).toFixed(2) : "0.00";
-    const currentRunRate = summary.completeOvers > 0 ? 
+    const currentRunRate = summary.completeOvers > 0 || summary.ballsInCurrentOver > 0 ? 
       (summary.runs / (summary.completeOvers + (summary.ballsInCurrentOver / 6))).toFixed(2) : "0.00";
     
     return (
