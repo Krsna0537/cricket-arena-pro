@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -706,7 +705,6 @@ export function useLiveBallEvents(matchId: string, inning: number) {
   const supabaseClient = useRef(supabase);
 
   useEffect(() => {
-    let subscription: any;
     let mounted = true;
     
     // Initial fetch
@@ -748,11 +746,9 @@ export function useLiveBallEvents(matchId: string, inning: number) {
       )
       .subscribe();
     
-    subscription = channel;
-    
     return () => {
       mounted = false;
-      if (subscription) supabaseClient.current.removeChannel(subscription);
+      supabaseClient.current.removeChannel(channel);
     };
   }, [matchId, inning, fetchBallEvents]);
   

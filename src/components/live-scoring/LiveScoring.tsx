@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,9 @@ interface LiveScoringProps {
   team2?: Team;
   onUpdateScore: (match: Match) => void;
 }
+
+// Define an array of extra types for better type checking
+const EXTRA_TYPES: BallEventType[] = ['wide', 'no-ball', 'bye', 'leg-bye'];
 
 const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdateScore }) => {
   const { toast } = useToast();
@@ -238,7 +240,7 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       }
       
       // Handle extras
-      if (eventType === 'wide' || eventType === 'no-ball' || eventType === 'bye' || eventType === 'leg-bye') {
+      if (['wide', 'no-ball', 'bye', 'leg-bye'].includes(eventType)) {
         setExtrasType(eventType);
         setShowExtrasModal(true);
         setIsLoading(false);
@@ -246,10 +248,10 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       }
       
       // Determine ball number: legal deliveries only for ball count
-      const legalCount = events.filter(e => e.eventType !== 'wide' && e.eventType !== 'no-ball').length;
-      const nextLegal = (eventType === 'wide' || eventType === 'no-ball') ? legalCount : legalCount + 1;
+      const legalCount = events.filter(e => !['wide', 'no-ball'].includes(e.eventType)).length;
+      const nextLegal = (!['wide', 'no-ball'].includes(eventType)) ? legalCount + 1 : legalCount;
       const overNum = Math.floor((nextLegal - 1) / 6) + 1;
-      const ballNum = (eventType === 'wide' || eventType === 'no-ball') ? (legalCount % 6) + 1 : ((nextLegal - 1) % 6) + 1;
+      const ballNum = (!['wide', 'no-ball'].includes(eventType)) ? ((nextLegal - 1) % 6) + 1 : (legalCount % 6) + 1;
       
       // Record the ball event
       console.log('[LiveScoring] addBallEvent payload', {
@@ -289,7 +291,7 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       if (eventType === 'run' && runs % 2 === 1) swap = true;
       
       // End of over: swap strike and prompt for new bowler
-      if (ballNum === 6 && eventType !== 'wide' && eventType !== 'no-ball') {
+      if (ballNum === 6 && !['wide', 'no-ball'].includes(eventType)) {
         swap = !swap;
         setBowler(null);
         setShowPlayerSelect(true);
@@ -307,13 +309,13 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
         updatedMatch.scoreTeam1 = {
           runs: summary.runs + runs + extras,
           wickets: summary.wickets,
-          overs: summary.overs + (eventType !== 'wide' && eventType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + (!['wide', 'no-ball'].includes(eventType) ? 0.1 : 0)
         };
       } else {
         updatedMatch.scoreTeam2 = {
           runs: summary.runs + runs + extras,
           wickets: summary.wickets,
-          overs: summary.overs + (eventType !== 'wide' && eventType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + (!['wide', 'no-ball'].includes(eventType) ? 0.1 : 0)
         };
       }
       onUpdateScore(updatedMatch);
@@ -497,150 +499,148 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       </CardHeader>
       <CardContent>
         {isLive ? (
-          <>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 w-full mb-4">
-                <TabsTrigger value="scoring">Scoring</TabsTrigger>
-                <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
-                <TabsTrigger value="commentary">Commentary</TabsTrigger>
-              </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-3 w-full mb-4">
+              <TabsTrigger value="scoring">Scoring</TabsTrigger>
+              <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
+              <TabsTrigger value="commentary">Commentary</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="scoring">
+              <ScorecardHeader 
+                inning={inning} 
+                team1={team1} 
+                team2={team2} 
+                summary={{
+                  ...summary,
+                  completeOvers: summary.completeOvers,
+                  ballsInCurrentOver: summary.ballsInCurrentOver
+                }} 
+                runRate={summary.runRate}
+                isLive={isLive}
+                loadingSummary={loadingSummary}
+                targetScore={targetScore}
+              />
               
-              <TabsContent value="scoring">
-                <ScorecardHeader 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2} 
-                  summary={{
-                    ...summary,
-                    completeOvers: summary.completeOvers,
-                    ballsInCurrentOver: summary.ballsInCurrentOver
-                  }} 
-                  runRate={summary.runRate}
-                  isLive={isLive}
-                  loadingSummary={loadingSummary}
-                  targetScore={targetScore}
+              {showWicketModal && (
+                <WicketModal
+                  striker={striker}
+                  wicketType={wicketType}
+                  setWicketType={setWicketType}
+                  fielder={fielder}
+                  setFielder={setFielder}
+                  availableBowlers={availableBowlers}
+                  handleWicketConfirm={handleWicketConfirm}
+                  setShowWicketModal={setShowWicketModal}
+                  isLoading={isLoading}
                 />
-                
-                {showWicketModal && (
-                  <WicketModal
-                    striker={striker}
-                    wicketType={wicketType}
-                    setWicketType={setWicketType}
-                    fielder={fielder}
-                    setFielder={setFielder}
-                    availableBowlers={availableBowlers}
-                    handleWicketConfirm={handleWicketConfirm}
-                    setShowWicketModal={setShowWicketModal}
-                    isLoading={isLoading}
-                  />
-                )}
-                
-                {showExtrasModal && (
-                  <ExtrasModal
-                    extrasType={extrasType}
-                    extrasRuns={extrasRuns}
-                    setExtrasRuns={setExtrasRuns}
-                    handleExtrasConfirm={handleExtrasConfirm}
-                    setShowExtrasModal={setShowExtrasModal}
-                    setExtrasType={setExtrasType}
-                    isLoading={isLoading}
-                  />
-                )}
-                
-                {showPlayerSelect && (
-                  <PlayerSelect
-                    loadingSummary={loadingSummary}
-                    striker={striker}
-                    nonStriker={nonStriker}
-                    bowler={bowler}
-                    availableBatsmen={availableBatsmen}
-                    availableBowlers={availableBowlers}
-                    setStriker={setStriker}
-                    setNonStriker={setNonStriker}
-                    setBowler={setBowler}
-                    setShowPlayerSelect={setShowPlayerSelect}
-                  />
-                )}
-                
-                <CurrentOver events={events} />
-                
-                {isLive && !showPlayerSelect && !showWicketModal && !showExtrasModal && (
-                  <>
-                    <RunsControls 
-                      isLive={isLive} 
-                      isLoading={isLoading} 
-                      handleBall={handleBall} 
-                    />
-                    
-                    <InningsCompletionButton
-                      inning={inning}
-                      isLoading={isLoading}
-                      handleCompleteInnings={handleCompleteInnings}
-                      summary={summary}
-                    />
-                  </>
-                )}
-              </TabsContent>
+              )}
               
-              <TabsContent value="scorecard">
-                <ScorecardHeader 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2} 
-                  summary={{
-                    ...summary,
-                    completeOvers: summary.completeOvers,
-                    ballsInCurrentOver: summary.ballsInCurrentOver
-                  }} 
-                  runRate={summary.runRate}
-                  isLive={isLive}
-                  loadingSummary={loadingSummary}
-                  targetScore={targetScore}
+              {showExtrasModal && (
+                <ExtrasModal
+                  extrasType={extrasType}
+                  extrasRuns={extrasRuns}
+                  setExtrasRuns={setExtrasRuns}
+                  handleExtrasConfirm={handleExtrasConfirm}
+                  setShowExtrasModal={setShowExtrasModal}
+                  setExtrasType={setExtrasType}
+                  isLoading={isLoading}
                 />
-                
-                <BattingCard 
-                  events={events} 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2}
+              )}
+              
+              {showPlayerSelect && (
+                <PlayerSelect
+                  loadingSummary={loadingSummary}
                   striker={striker}
                   nonStriker={nonStriker}
-                />
-                
-                <BowlingCard 
-                  events={events} 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2}
                   bowler={bowler}
+                  availableBatsmen={availableBatsmen}
+                  availableBowlers={availableBowlers}
+                  setStriker={setStriker}
+                  setNonStriker={setNonStriker}
+                  setBowler={setBowler}
+                  setShowPlayerSelect={setShowPlayerSelect}
                 />
-              </TabsContent>
+              )}
               
-              <TabsContent value="commentary">
-                <ScorecardHeader 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2} 
-                  summary={{
-                    ...summary,
-                    completeOvers: summary.completeOvers,
-                    ballsInCurrentOver: summary.ballsInCurrentOver
-                  }} 
-                  runRate={summary.runRate}
-                  isLive={isLive}
-                  loadingSummary={loadingSummary}
-                  targetScore={targetScore}
-                />
-                
-                <BallLog 
-                  events={events} 
-                  inning={inning} 
-                  team1={team1} 
-                  team2={team2} 
-                />
-              </TabsContent>
-            </Tabs>
-          </>
+              <CurrentOver events={events} />
+              
+              {isLive && !showPlayerSelect && !showWicketModal && !showExtrasModal && (
+                <>
+                  <RunsControls 
+                    isLive={isLive} 
+                    isLoading={isLoading} 
+                    handleBall={handleBall} 
+                  />
+                  
+                  <InningsCompletionButton
+                    inning={inning}
+                    isLoading={isLoading}
+                    handleCompleteInnings={handleCompleteInnings}
+                    summary={summary}
+                  />
+                </>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="scorecard">
+              <ScorecardHeader 
+                inning={inning} 
+                team1={team1} 
+                team2={team2} 
+                summary={{
+                  ...summary,
+                  completeOvers: summary.completeOvers,
+                  ballsInCurrentOver: summary.ballsInCurrentOver
+                }} 
+                runRate={summary.runRate}
+                isLive={isLive}
+                loadingSummary={loadingSummary}
+                targetScore={targetScore}
+              />
+              
+              <BattingCard 
+                events={events} 
+                inning={inning} 
+                team1={team1} 
+                team2={team2}
+                striker={striker}
+                nonStriker={nonStriker}
+              />
+              
+              <BowlingCard 
+                events={events} 
+                inning={inning} 
+                team1={team1} 
+                team2={team2}
+                bowler={bowler}
+              />
+            </TabsContent>
+            
+            <TabsContent value="commentary">
+              <ScorecardHeader 
+                inning={inning} 
+                team1={team1} 
+                team2={team2} 
+                summary={{
+                  ...summary,
+                  completeOvers: summary.completeOvers,
+                  ballsInCurrentOver: summary.ballsInCurrentOver
+                }} 
+                runRate={summary.runRate}
+                isLive={isLive}
+                loadingSummary={loadingSummary}
+                targetScore={targetScore}
+              />
+              
+              <BallLog 
+                events={events} 
+                inning={inning} 
+                team1={team1} 
+                team2={team2} 
+              />
+            </TabsContent>
+          </Tabs>
         ) : (
           <MatchNotStartedPlaceholder />
         )}
