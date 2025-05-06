@@ -698,19 +698,56 @@ export const useApp = () => {
   return context;
 };
 
-// Real-time ball event subscription hook - optimized to prevent infinite type instantiation
+// Real-time ball event subscription hook - fixed to prevent infinite type instantiation
 export function useLiveBallEvents(matchId: string, inning: number) {
   const [events, setEvents] = useState<BallEvent[]>([]);
-  const { fetchBallEvents } = useApp();
+  const { toast } = useToast();
   const supabaseClient = useRef(supabase);
 
   useEffect(() => {
     let mounted = true;
     
     // Initial fetch
-    fetchBallEvents(matchId, inning).then(fetchedEvents => {
-      if (mounted) setEvents(fetchedEvents);
-    });
+    const fetchEvents = async () => {
+      try {
+        const { data, error } = await supabaseClient.current
+          .from('ball_by_ball')
+          .select('*')
+          .eq('match_id', matchId)
+          .eq('inning', inning)
+          .order('over', { ascending: true })
+          .order('ball', { ascending: true });
+          
+        if (error) throw error;
+        
+        // Map DB rows to BallEvent[]
+        if (mounted) {
+          setEvents((data as any[]).map(row => ({
+            id: row.id,
+            matchId: row.match_id,
+            teamId: row.team_id,
+            inning: row.inning,
+            over: row.over,
+            ball: row.ball,
+            eventType: row.event_type as BallEventType,
+            runs: row.runs,
+            extras: row.extras,
+            batsmanId: row.batsman_id,
+            bowlerId: row.bowler_id,
+            isStriker: row.is_striker,
+            nonStrikerId: row.non_striker_id,
+            wicketType: row.wicket_type as WicketType | undefined,
+            fielderId: row.fielder_id,
+            extrasType: row.extras_type,
+            createdAt: row.created_at
+          })));
+        }
+      } catch (error: any) {
+        toast({ title: 'Error', description: 'Failed to fetch ball events: ' + error.message, variant: 'destructive' });
+      }
+    };
+    
+    fetchEvents();
     
     // Subscribe to new events
     const channel = supabaseClient.current
@@ -750,7 +787,7 @@ export function useLiveBallEvents(matchId: string, inning: number) {
       mounted = false;
       supabaseClient.current.removeChannel(channel);
     };
-  }, [matchId, inning, fetchBallEvents]);
+  }, [matchId, inning, toast]);
   
   return events;
 }
