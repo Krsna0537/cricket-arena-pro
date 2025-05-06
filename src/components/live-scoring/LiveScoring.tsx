@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -323,13 +322,13 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
         updatedMatch.scoreTeam1 = {
           runs: summary.runs + runs + extras,
           wickets: summary.wickets,
-          overs: summary.overs + (eventType !== 'wide' && eventType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + ((eventType !== 'wide' && eventType !== 'no-ball') ? 0.1 : 0)
         };
       } else {
         updatedMatch.scoreTeam2 = {
           runs: summary.runs + runs + extras,
           wickets: summary.wickets,
-          overs: summary.overs + (eventType !== 'wide' && eventType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + ((eventType !== 'wide' && eventType !== 'no-ball') ? 0.1 : 0)
         };
       }
       onUpdateScore(updatedMatch);
@@ -467,13 +466,13 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
         updatedMatch.scoreTeam1 = {
           runs: summary.runs + extrasRuns,
           wickets: summary.wickets,
-          overs: summary.overs + (extrasType !== 'wide' && extrasType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + ((extrasType !== 'wide' && extrasType !== 'no-ball') ? 0.1 : 0)
         };
       } else {
         updatedMatch.scoreTeam2 = {
           runs: summary.runs + extrasRuns,
           wickets: summary.wickets,
-          overs: summary.overs + (extrasType !== 'wide' && extrasType !== 'no-ball' ? 0.1 : 0)
+          overs: summary.overs + ((extrasType !== 'wide' && extrasType !== 'no-ball') ? 0.1 : 0)
         };
       }
       onUpdateScore(updatedMatch);

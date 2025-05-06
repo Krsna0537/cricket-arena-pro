@@ -1,5 +1,6 @@
 
 
+
 export type TournamentType = 'league' | 'knockout';
 
 export type PlayerRole = 'batsman' | 'bowler' | 'all-rounder' | 'keeper';
@@ -144,3 +145,18 @@ export interface TargetScore {
   targetRuns: number;
 }
 
+// Add a custom Match type from DB to fix the scoreTeam1/scoreTeam2 property issues
+export interface MatchFromDB {
+  created_at: string;
+  date: string;
+  id: string;
+  result: string | null;
+  status: string;
+  team1_id: string;
+  team2_id: string;
+  tournament_id: string;
+  updated_at: string;
+  venue: string;
+  scoreTeam1?: any;
+  scoreTeam2?: any;
+}

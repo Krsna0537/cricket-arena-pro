@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType } from '@/types';
+import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
@@ -489,6 +489,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addBallEvent = async (event: Omit<BallEvent, 'id' | 'createdAt'>) => {
     try {
+      // Calculate the sequential ball number
+      const ballNumber = (event.over - 1) * 6 + event.ball;
+      
       // Format the data for the database
       const ballEventData = {
         match_id: event.matchId,
@@ -506,7 +509,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         wicket_type: event.wicketType,
         fielder_id: event.fielderId,
         extras_type: event.extrasType,
-        ball_number: (event.over - 1) * 6 + event.ball // Calculate the sequential ball number
+        ball_number: ballNumber // Add calculated sequential ball number
       };
 
       const { data, error } = await supabase
@@ -620,7 +623,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       return {
         matchId: data.match_id,
-        inning: data.inning || inning,
+        inning: inning, // Use the passed inning parameter instead of data.inning
         runs: data.total_runs,
         wickets: data.wickets,
         overs: data.overs,
