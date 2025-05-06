@@ -77,7 +77,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             stats: player.stats ?? undefined
           }))
         })),
-        matches: (row.matches ?? []).map(match => ({
+        matches: (row.matches ?? []).map((match: MatchFromDB) => ({
           id: match.id,
           tournamentId: match.tournament_id,
           team1Id: match.team1_id,
