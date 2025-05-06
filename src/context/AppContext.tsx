@@ -1,9 +1,9 @@
+
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary } from '@/types';
+import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
-import { createClient } from '@supabase/supabase-js';
 
 interface AppContextType {
   tournaments: Tournament[];
@@ -24,6 +24,8 @@ interface AppContextType {
   fetchBallEvents: (matchId: string, inning: number) => Promise<BallEvent[]>;
   upsertInningsSummary: (summary: InningsSummary) => Promise<void>;
   fetchInningsSummary: (matchId: string, inning: number) => Promise<InningsSummary | null>;
+  fetchTargetScore: (matchId: string) => Promise<number | null>;
+  generateShareableLink: (tournament: Tournament) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -84,7 +86,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: match.date,
           venue: match.venue,
           status: match.status as MatchStatus,
-          result: match.result ?? undefined
+          result: match.result ?? undefined,
+          // Parse score from JSON format if available
+          scoreTeam1: match.scoreTeam1 ? {
+            runs: match.scoreTeam1.runs || 0,
+            wickets: match.scoreTeam1.wickets || 0,
+            overs: match.scoreTeam1.overs || 0
+          } : undefined,
+          scoreTeam2: match.scoreTeam2 ? {
+            runs: match.scoreTeam2.runs || 0,
+            wickets: match.scoreTeam2.wickets || 0,
+            overs: match.scoreTeam2.overs || 0
+          } : undefined
         })),
       }));
 
@@ -140,12 +153,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Tournament created successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to create tournament: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -171,12 +187,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Tournament updated successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update tournament: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -218,12 +237,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Team added successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to add team: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -252,12 +274,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Team updated successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update team: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -296,12 +321,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Player added successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to add player: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -331,12 +359,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Player updated successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update player: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -377,27 +408,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Match added successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to add match: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   const updateMatch = async (match: Match) => {
     try {
+      const updateData: any = {
+        team1_id: match.team1Id,
+        team2_id: match.team2Id,
+        date: match.date,
+        venue: match.venue,
+        status: match.status,
+        result: match.result
+      };
+
+      // Add score data if available
+      if (match.scoreTeam1) {
+        updateData.scoreTeam1 = match.scoreTeam1;
+      }
+      
+      if (match.scoreTeam2) {
+        updateData.scoreTeam2 = match.scoreTeam2;
+      }
+
       const { error } = await supabase
         .from('matches')
-        .update({
-          team1_id: match.team1Id,
-          team2_id: match.team2Id,
-          date: match.date,
-          venue: match.venue,
-          status: match.status,
-          result: match.result
-        })
+        .update(updateData)
         .eq('id', match.id);
 
       if (error) throw error;
@@ -415,12 +460,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: "Success",
         description: "Match updated successfully",
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update match: " + error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -442,24 +490,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addBallEvent = async (event: Omit<BallEvent, 'id' | 'createdAt'>) => {
     try {
+      // Format the data for the database
+      const ballEventData = {
+        match_id: event.matchId,
+        team_id: event.teamId,
+        inning: event.inning,
+        over: event.over,
+        ball: event.ball,
+        event_type: event.eventType,
+        runs: event.runs,
+        extras: event.extras,
+        batsman_id: event.batsmanId,
+        bowler_id: event.bowlerId,
+        non_striker_id: event.nonStrikerId,
+        is_striker: event.isStriker,
+        wicket_type: event.wicketType,
+        fielder_id: event.fielderId,
+        extras_type: event.extrasType
+      };
+
       const { data, error } = await supabase
         .from('ball_by_ball')
-        .insert([{ 
-          match_id: event.matchId,
-          team_id: event.teamId,
-          inning: event.inning,
-          over: event.over,
-          ball: event.ball,
-          event_type: event.eventType,
-          runs: event.runs,
-          extras: event.extras,
-          batsman_id: event.batsmanId,
-          bowler_id: event.bowlerId,
-          is_striker: event.isStriker
-        }])
+        .insert([ballEventData])
         .select()
         .single();
+      
       if (error) throw error;
+      
       // Map DB row to BallEvent
       return {
         id: data.id,
@@ -474,6 +531,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         batsmanId: data.batsman_id,
         bowlerId: data.bowler_id,
         isStriker: data.is_striker,
+        nonStrikerId: data.non_striker_id,
+        wicketType: data.wicket_type,
+        fielderId: data.fielder_id,
+        extrasType: data.extras_type,
         createdAt: data.created_at
       };
     } catch (error: any) {
@@ -491,7 +552,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .eq('inning', inning)
         .order('over', { ascending: true })
         .order('ball', { ascending: true });
+        
       if (error) throw error;
+      
       // Map DB rows to BallEvent[]
       return (data as any[]).map(row => ({
         id: row.id,
@@ -506,6 +569,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         batsmanId: row.batsman_id,
         bowlerId: row.bowler_id,
         isStriker: row.is_striker,
+        nonStrikerId: row.non_striker_id,
+        wicketType: row.wicket_type,
+        fielderId: row.fielder_id,
+        extrasType: row.extras_type,
         createdAt: row.created_at
       })) as BallEvent[];
     } catch (error: any) {
@@ -522,14 +589,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           {
             match_id: summary.matchId,
             inning: summary.inning,
-            runs: summary.runs,
+            total_runs: summary.runs,
             wickets: summary.wickets,
-            overs: summary.overs
+            overs: summary.overs,
+            extras: summary.extras,
+            target: summary.target
           }
         ]);
+        
       if (error) throw error;
+      
+      return;
     } catch (error: any) {
       toast({ title: 'Error', description: 'Failed to update innings summary: ' + error.message, variant: 'destructive' });
+      throw error;
     }
   };
 
@@ -540,21 +613,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .select('*')
         .eq('match_id', matchId)
         .eq('inning', inning)
-        .single();
-      if (error && error.code === 'PGRST116') return null;
-      if (error) throw error;
+        .maybeSingle();
+        
+      if (error && error.code !== 'PGRST116') throw error;
       if (!data) return null;
+      
       return {
         matchId: data.match_id,
         inning: data.inning,
-        runs: data.runs,
+        runs: data.total_runs,
         wickets: data.wickets,
-        overs: data.overs
+        overs: data.overs,
+        extras: data.extras,
+        target: data.target
       } as InningsSummary;
     } catch (error: any) {
       toast({ title: 'Error', description: 'Failed to fetch innings summary: ' + error.message, variant: 'destructive' });
       return null;
     }
+  };
+
+  const fetchTargetScore = async (matchId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('target_scores')
+        .select('target_runs')
+        .eq('match_id', matchId)
+        .eq('innings_number', 1)
+        .maybeSingle();
+        
+      if (error && error.code !== 'PGRST116') throw error;
+      if (!data) return null;
+      
+      return data.target_runs;
+    } catch (error: any) {
+      toast({ title: 'Error', description: 'Failed to fetch target score: ' + error.message, variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const generateShareableLink = (tournament: Tournament) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/tournament/${tournament.accessCode || tournament.id}`;
   };
 
   return (
@@ -577,7 +677,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addBallEvent,
         fetchBallEvents,
         upsertInningsSummary,
-        fetchInningsSummary
+        fetchInningsSummary,
+        fetchTargetScore,
+        generateShareableLink
       }}
     >
       {children}
@@ -603,8 +705,12 @@ export function useLiveBallEvents(matchId: string, inning: number) {
   useEffect(() => {
     let subscription: any;
     let mounted = true;
+    
     // Initial fetch
-    fetchBallEvents(matchId, inning).then(setEvents);
+    fetchBallEvents(matchId, inning).then(fetchedEvents => {
+      if (mounted) setEvents(fetchedEvents);
+    });
+    
     // Subscribe to new events
     subscription = supabaseClient.current
       .channel('ball-by-ball-live')
@@ -626,16 +732,22 @@ export function useLiveBallEvents(matchId: string, inning: number) {
               batsmanId: payload.new.batsman_id,
               bowlerId: payload.new.bowler_id,
               isStriker: payload.new.is_striker,
+              nonStrikerId: payload.new.non_striker_id,
+              wicketType: payload.new.wicket_type,
+              fielderId: payload.new.fielder_id,
+              extrasType: payload.new.extras_type,
               createdAt: payload.new.created_at
             }]);
           }
         }
       )
       .subscribe();
+    
     return () => {
       mounted = false;
       if (subscription) supabaseClient.current.removeChannel(subscription);
     };
-  }, [matchId, inning]);
+  }, [matchId, inning, fetchBallEvents]);
+  
   return events;
 }

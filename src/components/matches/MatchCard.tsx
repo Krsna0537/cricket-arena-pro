@@ -16,11 +16,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, team1, team2, onClick }) =
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'live':
-        return <Badge className="status-live">LIVE</Badge>;
+        return <Badge className="bg-red-500 animate-pulse">LIVE</Badge>;
       case 'completed':
-        return <Badge className="status-completed">Completed</Badge>;
+        return <Badge className="bg-green-500">Completed</Badge>;
       default:
-        return <Badge className="status-upcoming">Upcoming</Badge>;
+        return <Badge className="bg-blue-500">Upcoming</Badge>;
     }
   };
 
@@ -34,10 +34,22 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, team1, team2, onClick }) =
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <Card className={`cricket-card hover:shadow-md transition-shadow ${match.status === 'live' ? 'border-red-500 border-2' : ''}`} onClick={onClick}>
+    <Card 
+      className={`cricket-card hover:shadow-md transition-all cursor-pointer ${
+        match.status === 'live' ? 'border-red-500 border-2 shadow' : ''
+      }`} 
+      onClick={onClick}
+    >
       <CardHeader className="pb-2 flex flex-row justify-between items-center">
-        <h3 className="font-semibold">
+        <h3 className="font-semibold truncate max-w-[70%]">
           {team1?.name || 'Team 1'} vs {team2?.name || 'Team 2'}
         </h3>
         {getStatusBadge(match.status)}
@@ -49,24 +61,28 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, team1, team2, onClick }) =
             <span>{formatDate(match.date)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Clock className="h-4 w-4" />
+            <span>{formatTime(match.date)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
             <MapPin className="h-4 w-4" />
-            <span>{match.venue}</span>
+            <span className="truncate">{match.venue}</span>
           </div>
         </div>
 
         {(match.status === 'live' || match.status === 'completed') && match.scoreTeam1 && (
           <div className="mt-3 grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-md">
             <div className="text-sm">
-              <p className="font-medium">{team1?.name || 'Team 1'}</p>
+              <p className="font-medium truncate">{team1?.name || 'Team 1'}</p>
               <p className="text-cricket-navy font-bold">
-                {match.scoreTeam1.runs}/{match.scoreTeam1.wickets} ({match.scoreTeam1.overs} ov)
+                {match.scoreTeam1.runs}/{match.scoreTeam1.wickets} ({match.scoreTeam1.overs.toFixed(1)} ov)
               </p>
             </div>
             {match.scoreTeam2 && match.scoreTeam2.runs > 0 && (
               <div className="text-sm">
-                <p className="font-medium">{team2?.name || 'Team 2'}</p>
+                <p className="font-medium truncate">{team2?.name || 'Team 2'}</p>
                 <p className="text-cricket-navy font-bold">
-                  {match.scoreTeam2.runs}/{match.scoreTeam2.wickets} ({match.scoreTeam2.overs} ov)
+                  {match.scoreTeam2.runs}/{match.scoreTeam2.wickets} ({match.scoreTeam2.overs.toFixed(1)} ov)
                 </p>
               </div>
             )}
@@ -74,7 +90,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, team1, team2, onClick }) =
         )}
 
         {match.result && (
-          <div className="mt-2 text-sm font-medium text-cricket-navy">
+          <div className="mt-2 text-sm font-medium text-green-700 p-1.5 bg-green-50 rounded-md">
             {match.result}
           </div>
         )}

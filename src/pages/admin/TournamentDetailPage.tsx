@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import TeamCard from '@/components/teams/TeamCard';
 import TeamForm from '@/components/teams/TeamForm';
 import PlayerForm from '@/components/players/PlayerForm';
@@ -13,27 +15,34 @@ import ScheduleMatch from '@/components/matches/ScheduleMatch';
 import LiveScoring from '@/components/live-scoring/LiveScoring';
 import { useApp } from '@/context/AppContext';
 import { Tournament, Team } from '@/types';
-import { AlertCircle, Plus } from 'lucide-react';
+import { AlertCircle, Check, Copy, Link as LinkIcon, Plus, Share2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
 
 const TournamentDetailPage = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const { findTournament, updateTournament, addTeam, addPlayer, addMatch, updateMatch } = useApp();
+  const { findTournament, updateTournament, addTeam, addPlayer, addMatch, updateMatch, generateShareableLink } = useApp();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [shareLink, setShareLink] = useState<string>('');
+  const [accessCodeCopied, setAccessCodeCopied] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const location = useLocation();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (tournamentId) {
       const found = findTournament(tournamentId);
       if (found) {
         setTournament(found);
+        setShareLink(generateShareableLink(found));
       }
     }
-  }, [tournamentId, findTournament]);
+  }, [tournamentId, findTournament, generateShareableLink]);
 
   if (!tournament) {
     return (
@@ -45,40 +54,48 @@ const TournamentDetailPage = () => {
     );
   }
 
-  const handleAddTeam = (data: { name: string, logo?: string }) => {
-    addTeam(tournament.id, {
-      name: data.name,
-      logo: data.logo,
-      tournamentId: tournament.id
-    });
-    setShowTeamForm(false);
-    
-    // Refresh tournament data
-    const updated = findTournament(tournament.id);
-    if (updated) {
-      setTournament(updated);
-    }
-  };
-
-  const handleAddPlayer = (data: { name: string, role: any }) => {
-    if (selectedTeam) {
-      addPlayer(selectedTeam.id, {
+  const handleAddTeam = async (data: { name: string, logo?: string }) => {
+    try {
+      await addTeam(tournament.id, {
         name: data.name,
-        role: data.role,
-        teamId: selectedTeam.id
+        logo: data.logo,
+        tournamentId: tournament.id
       });
-      setShowPlayerForm(false);
+      setShowTeamForm(false);
       
       // Refresh tournament data
       const updated = findTournament(tournament.id);
       if (updated) {
         setTournament(updated);
+      }
+    } catch (error) {
+      console.error("Error adding team:", error);
+    }
+  };
+
+  const handleAddPlayer = async (data: { name: string, role: any }) => {
+    if (selectedTeam) {
+      try {
+        await addPlayer(selectedTeam.id, {
+          name: data.name,
+          role: data.role,
+          teamId: selectedTeam.id
+        });
+        setShowPlayerForm(false);
         
-        // Update selected team
-        const updatedTeam = updated.teams.find(t => t.id === selectedTeam.id);
-        if (updatedTeam) {
-          setSelectedTeam(updatedTeam);
+        // Refresh tournament data
+        const updated = findTournament(tournament.id);
+        if (updated) {
+          setTournament(updated);
+          
+          // Update selected team
+          const updatedTeam = updated.teams.find(t => t.id === selectedTeam.id);
+          if (updatedTeam) {
+            setSelectedTeam(updatedTeam);
+          }
         }
+      } catch (error) {
+        console.error("Error adding player:", error);
       }
     }
   };
@@ -105,18 +122,44 @@ const TournamentDetailPage = () => {
     }
   };
 
-  const handleUpdateMatch = (updatedMatch: any) => {
-    const updatedMatches = tournament.matches.map(m => 
-      m.id === updatedMatch.id ? updatedMatch : m
-    );
-    
-    const updatedTournament = {
-      ...tournament,
-      matches: updatedMatches
-    };
-    
-    updateTournament(updatedTournament);
-    setTournament(updatedTournament);
+  const handleUpdateMatch = async (updatedMatch: any) => {
+    try {
+      await updateMatch(updatedMatch);
+      
+      // Refresh tournament data
+      const updated = findTournament(tournament.id);
+      if (updated) {
+        setTournament(updated);
+      }
+    } catch (error) {
+      console.error('Failed to update match:', error);
+    }
+  };
+
+  const copyToClipboard = (text: string, type: 'code' | 'link') => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        if (type === 'code') {
+          setAccessCodeCopied(true);
+          setTimeout(() => setAccessCodeCopied(false), 2000);
+        } else {
+          setShareLinkCopied(true);
+          setTimeout(() => setShareLinkCopied(false), 2000);
+        }
+        
+        toast({
+          title: "Copied to clipboard",
+          description: `${type === 'code' ? 'Access code' : 'Shareable link'} copied to clipboard.`,
+        });
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        toast({
+          title: "Failed to copy",
+          description: "Please try again or copy manually.",
+          variant: "destructive"
+        });
+      });
   };
 
   const selectedMatch = selectedMatchId 
@@ -142,34 +185,85 @@ const TournamentDetailPage = () => {
             {tournament.type.charAt(0).toUpperCase() + tournament.type.slice(1)} Tournament • 
             {' '}{new Date(tournament.startDate).toLocaleDateString()} to {new Date(tournament.endDate).toLocaleDateString()}
           </p>
+          <Badge className={`mt-2 ${
+            tournament.status === 'upcoming' ? 'bg-blue-500' : 
+            tournament.status === 'ongoing' ? 'bg-amber-500' : 'bg-green-500'
+          }`}>
+            {tournament.status.toUpperCase()}
+          </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to={`/tournament/${tournament.id}`}>
             <Button variant="outline">Public View</Button>
           </Link>
-          <Button variant="outline">Share Link</Button>
-          <div className="bg-gray-100 px-3 py-1 rounded flex items-center border">
-            <span className="text-sm">Code: </span>
-            <span className="font-mono ml-1 font-bold">{tournament.accessCode}</span>
-          </div>
         </div>
       </div>
 
       {/* Sharable Link/Code Section */}
-      <Card className="border-blue-400">
-        <CardHeader>
+      <Card className="border-blue-200 bg-blue-50/30">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <span>Sharable Tournament Link</span>
+            <Share2 className="h-5 w-5 text-blue-600" />
+            <span className="text-blue-800">Tournament Sharing</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row md:items-center gap-2">
-            <div>
-              <span className="font-semibold">Code:</span> <span className="text-blue-700 font-mono">{tournament.accessCode}</span>
+          <div className="flex flex-col space-y-4">
+            <div className="rounded-lg bg-white p-4 border border-blue-100 shadow-sm">
+              <div className="font-medium text-sm text-blue-900 mb-2 flex items-center gap-1">
+                <LinkIcon className="h-4 w-4" />
+                Share Link
+              </div>
+              <div className="flex items-center gap-2">
+                <Input 
+                  className="font-mono text-sm bg-gray-50" 
+                  value={shareLink}
+                  readOnly
+                />
+                <Button 
+                  size="sm" 
+                  className={shareLinkCopied ? "bg-green-600" : "bg-blue-600"} 
+                  onClick={() => copyToClipboard(shareLink, 'link')}
+                >
+                  {shareLinkCopied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div>
-              <span className="font-semibold">Link:</span> <span className="text-blue-700 font-mono">{`${window.location.origin}/tournament/${tournament.accessCode}`}</span>
-              <Button size="sm" className="ml-2" onClick={() => {navigator.clipboard.writeText(`${window.location.origin}/tournament/${tournament.accessCode}`);}}>Copy Link</Button>
+            
+            <div className="rounded-lg bg-white p-4 border border-blue-100 shadow-sm">
+              <div className="font-medium text-sm text-blue-900 mb-2">Access Code</div>
+              <div className="flex items-center gap-2">
+                <div className="p-2.5 font-mono bg-gray-50 border rounded-md flex-1 text-center text-lg tracking-wider font-bold">
+                  {tournament.accessCode}
+                </div>
+                <Button 
+                  size="sm" 
+                  className={accessCodeCopied ? "bg-green-600" : "bg-blue-600"} 
+                  onClick={() => copyToClipboard(tournament.accessCode || '', 'code')}
+                >
+                  {accessCodeCopied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

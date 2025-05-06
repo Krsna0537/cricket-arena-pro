@@ -1,3 +1,4 @@
+
 export type TournamentType = 'league' | 'knockout';
 
 export type PlayerRole = 'batsman' | 'bowler' | 'all-rounder' | 'keeper';
@@ -75,8 +76,10 @@ export interface Leaderboard {
   netRunRate?: number;
 }
 
-// --- New types for ball-by-ball scoring ---
+// --- Ball-by-ball scoring types ---
 export type BallEventType = 'run' | 'wicket' | 'wide' | 'no-ball' | 'bye' | 'leg-bye';
+
+export type WicketType = 'bowled' | 'caught' | 'lbw' | 'run-out' | 'stumped' | 'hit-wicket';
 
 export interface BallEvent {
   id: string;
@@ -91,6 +94,10 @@ export interface BallEvent {
   batsmanId: string;
   bowlerId: string;
   isStriker: boolean;
+  nonStrikerId?: string; // Added non-striker ID
+  wicketType?: WicketType;
+  fielderId?: string;
+  extrasType?: string;
   createdAt?: string;
 }
 
@@ -100,4 +107,38 @@ export interface InningsSummary {
   runs: number;
   wickets: number;
   overs: number;
+  extras?: number;
+  target?: number;
+}
+
+export interface BattingCard {
+  playerId: string;
+  playerName: string;
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+  strikeRate: number;
+  isOut: boolean;
+  wicketType?: WicketType;
+  bowlerId?: string;
+  fielderId?: string;
+  isStriker?: boolean;
+  isNonStriker?: boolean;
+}
+
+export interface BowlingCard {
+  playerId: string;
+  playerName: string;
+  overs: number;
+  maidens: number;
+  runs: number;
+  wickets: number;
+  economy: number;
+}
+
+export interface TargetScore {
+  matchId: string;
+  inningsNumber: number;
+  targetRuns: number;
 }
