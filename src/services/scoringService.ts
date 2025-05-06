@@ -142,15 +142,30 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
     
+    // Define a concrete type for the database row to avoid infinite type instantiation
+    interface InningsSummaryRow {
+      match_id: string;
+      inning: number;
+      total_runs: number;
+      wickets: number;
+      overs: number;
+      extras?: number;
+      target?: number;
+    }
+    
+    // Explicitly cast the data to our row type
+    const row = data as InningsSummaryRow;
+    
+    // Map the database row to our domain type
     return {
-      matchId: data.match_id,
-      inning: inning,
-      runs: data.total_runs,
-      wickets: data.wickets,
-      overs: data.overs,
-      extras: data.extras,
-      target: data.target
-    } as InningsSummary;
+      matchId: row.match_id,
+      inning: row.inning,
+      runs: row.total_runs,
+      wickets: row.wickets,
+      overs: row.overs,
+      extras: row.extras,
+      target: row.target
+    };
   } catch (error) {
     throw error;
   }
@@ -158,6 +173,11 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
 
 export async function fetchTargetScore(matchId: string): Promise<number | null> {
   try {
+    // Define a type for the target score row
+    interface TargetScoreRow {
+      target_runs: number;
+    }
+    
     const { data, error } = await supabase
       .from('target_scores')
       .select('target_runs')
@@ -168,7 +188,9 @@ export async function fetchTargetScore(matchId: string): Promise<number | null> 
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
     
-    return data.target_runs;
+    // Explicitly cast to our row type
+    const row = data as TargetScoreRow;
+    return row.target_runs;
   } catch (error) {
     throw error;
   }
