@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -699,7 +698,7 @@ export const useApp = () => {
   return context;
 };
 
-// Define a type for database row responses to avoid type recursion
+// Define a separate interface for ball event database rows to avoid recursive typing
 interface BallEventRow {
   id: string;
   match_id: string;
@@ -720,7 +719,30 @@ interface BallEventRow {
   created_at: string;
 }
 
-// Real-time ball event subscription hook with explicit type definitions to prevent infinite type instantiation
+// Explicitly map from row type to BallEvent to break the recursive type chain
+function mapRowToBallEvent(row: BallEventRow): BallEvent {
+  return {
+    id: row.id,
+    matchId: row.match_id,
+    teamId: row.team_id,
+    inning: row.inning,
+    over: row.over,
+    ball: row.ball,
+    eventType: row.event_type as BallEventType,
+    runs: row.runs,
+    extras: row.extras,
+    batsmanId: row.batsman_id,
+    bowlerId: row.bowler_id,
+    isStriker: row.is_striker,
+    nonStrikerId: row.non_striker_id,
+    wicketType: row.wicket_type as WicketType | undefined,
+    fielderId: row.fielder_id,
+    extrasType: row.extras_type,
+    createdAt: row.created_at
+  };
+}
+
+// Real-time ball event subscription hook
 export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] {
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { toast } = useToast();
@@ -729,7 +751,7 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
   useEffect(() => {
     let mounted = true;
     
-    // Initial fetch
+    // Initial fetch with strongly typed handler function
     const fetchEvents = async () => {
       try {
         const { data, error } = await supabaseClient.current
@@ -742,27 +764,9 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
           
         if (error) throw error;
         
-        // Map DB rows to BallEvent[] with explicit typing
-        if (mounted) {
-          const mappedEvents: BallEvent[] = (data || []).map((row: BallEventRow) => ({
-            id: row.id,
-            matchId: row.match_id,
-            teamId: row.team_id,
-            inning: row.inning,
-            over: row.over,
-            ball: row.ball,
-            eventType: row.event_type as BallEventType,
-            runs: row.runs,
-            extras: row.extras,
-            batsmanId: row.batsman_id,
-            bowlerId: row.bowler_id,
-            isStriker: row.is_striker,
-            nonStrikerId: row.non_striker_id,
-            wicketType: row.wicket_type as WicketType | undefined,
-            fielderId: row.fielder_id,
-            extrasType: row.extras_type,
-            createdAt: row.created_at
-          }));
+        // Use a strongly typed conversion
+        if (mounted && data) {
+          const mappedEvents: BallEvent[] = (data as BallEventRow[]).map(mapRowToBallEvent);
           setEvents(mappedEvents);
         }
       } catch (error: any) {
@@ -776,34 +780,17 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
     
     fetchEvents();
     
-    // Subscribe to new events
+    // Subscribe to new events with strongly typed payload
+    type PayloadType = { new: BallEventRow };
+    
     const channel = supabaseClient.current
       .channel('ball-by-ball-live')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'ball_by_ball', filter: `match_id=eq.${matchId}` },
-        (payload: { new: BallEventRow }) => {
+        (payload: PayloadType) => {
           if (payload.new && payload.new.inning === inning && mounted) {
-            const newEvent: BallEvent = {
-              id: payload.new.id,
-              matchId: payload.new.match_id,
-              teamId: payload.new.team_id,
-              inning: payload.new.inning,
-              over: payload.new.over,
-              ball: payload.new.ball,
-              eventType: payload.new.event_type as BallEventType,
-              runs: payload.new.runs,
-              extras: payload.new.extras,
-              batsmanId: payload.new.batsman_id,
-              bowlerId: payload.new.bowler_id,
-              isStriker: payload.new.is_striker,
-              nonStrikerId: payload.new.non_striker_id,
-              wicketType: payload.new.wicket_type as WicketType | undefined,
-              fielderId: payload.new.fielder_id,
-              extrasType: payload.new.extras_type,
-              createdAt: payload.new.created_at
-            };
-            
+            const newEvent = mapRowToBallEvent(payload.new);
             setEvents(prev => [...prev, newEvent]);
           }
         }
