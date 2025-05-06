@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -262,9 +263,9 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
       
       // Determine ball number: legal deliveries only for ball count
       const legalCount = events.filter(e => e.eventType !== 'wide' && e.eventType !== 'no-ball').length;
-      const nextLegal = eventType === 'wide' || eventType === 'no-ball' ? legalCount : legalCount + 1;
+      const nextLegal = (eventType === 'wide' || eventType === 'no-ball') ? legalCount : legalCount + 1;
       const overNum = Math.floor((nextLegal - 1) / 6) + 1;
-      const ballNum = eventType === 'wide' || eventType === 'no-ball' ? (legalCount % 6) + 1 : ((nextLegal - 1) % 6) + 1;
+      const ballNum = (eventType === 'wide' || eventType === 'no-ball') ? (legalCount % 6) + 1 : ((nextLegal - 1) % 6) + 1;
       
       // Record the ball event
       console.log('[LiveScoring] addBallEvent payload', {
