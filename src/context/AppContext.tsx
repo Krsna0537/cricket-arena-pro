@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -698,7 +699,7 @@ export const useApp = () => {
   return context;
 };
 
-// Real-time ball event subscription hook
+// Real-time ball event subscription hook - optimized to prevent infinite type instantiation
 export function useLiveBallEvents(matchId: string, inning: number) {
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { fetchBallEvents } = useApp();

@@ -16,8 +16,8 @@ interface ScorecardHeaderProps {
     extras?: number;
     fours: number;
     sixes: number;
-    completeOvers?: number;
-    ballsInCurrentOver?: number;
+    completeOvers: number;
+    ballsInCurrentOver: number;
   };
   runRate: string;
   isLive: boolean;
@@ -72,8 +72,8 @@ export const ScorecardHeader: React.FC<ScorecardHeaderProps> = ({
             targetScore={targetScore} 
             summary={{
               runs: summary.runs,
-              completeOvers: summary.completeOvers || Math.floor(summary.overs),
-              ballsInCurrentOver: summary.ballsInCurrentOver || ((summary.overs % 1) * 10)
+              completeOvers: summary.completeOvers,
+              ballsInCurrentOver: summary.ballsInCurrentOver
             }} 
           />
         </>
