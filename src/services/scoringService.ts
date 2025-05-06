@@ -1,3 +1,4 @@
+
 import { BallEvent, InningsSummary, BallEventType, WicketType } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -98,8 +99,10 @@ export async function fetchBallEvents(matchId: string, inning: number): Promise<
       
     if (error) throw error;
     
+    // Type the data array explicitly before mapping
+    const ballEventRows = data as BallEventRow[];
     // Use our mapping function to convert rows to BallEvents
-    return (data as BallEventRow[]).map(mapRowToBallEvent);
+    return ballEventRows.map(mapRowToBallEvent);
   } catch (error) {
     throw error;
   }
