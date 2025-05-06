@@ -1,8 +1,29 @@
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, BallEventType, InningsSummary, TargetScore, WicketType, MatchFromDB } from '@/types';
+
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, InningsSummary } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { 
+  fetchTournaments,
+  generateAccessCode,
+  createTournament, 
+  updateTournament,
+  createTeam,
+  updateTeam,
+  createPlayer,
+  updatePlayer,
+  createMatch,
+  updateMatch,
+  generateShareableLink
+} from '@/services/tournamentService';
+import {
+  addBallEvent,
+  fetchBallEvents,
+  upsertInningsSummary,
+  fetchInningsSummary,
+  fetchTargetScore
+} from '@/services/scoringService';
+import { useLiveBallEvents } from '@/hooks/useLiveBallEvents';
 
 interface AppContextType {
   tournaments: Tournament[];
@@ -33,127 +54,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [currentTournament, setCurrentTournament] = useState<Tournament | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   // Fetch tournaments on mount
   useEffect(() => {
-    fetchTournaments();
-  }, []);
-
-  const fetchTournaments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select(`
-          *,
-          teams:teams(*, players:players(*)),
-          matches:matches(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedTournaments: Tournament[] = (data ?? []).map(row => ({
-        id: row.id,
-        name: row.name,
-        type: row.type as TournamentType,
-        startDate: row.start_date,
-        endDate: row.end_date,
-        creatorId: row.creator_id,
-        venueCity: row.venue_city ?? undefined,
-        accessCode: row.access_code ?? undefined,
-        status: row.status as 'upcoming' | 'ongoing' | 'completed',
-        teams: (row.teams ?? []).map(team => ({
-          id: team.id,
-          name: team.name,
-          logo: team.logo ?? undefined,
-          tournamentId: team.tournament_id,
-          players: (team.players ?? []).map((player: any) => ({
-            id: player.id,
-            name: player.name,
-            role: player.role,
-            teamId: player.team_id,
-            avatar: player.avatar,
-            stats: player.stats ?? undefined
-          }))
-        })),
-        matches: (row.matches ?? []).map((match: MatchFromDB) => ({
-          id: match.id,
-          tournamentId: match.tournament_id,
-          team1Id: match.team1_id,
-          team2Id: match.team2_id,
-          date: match.date,
-          venue: match.venue,
-          status: match.status as MatchStatus,
-          result: match.result ?? undefined,
-          // Parse score from JSON format if available
-          scoreTeam1: match.scoreTeam1 ? {
-            runs: match.scoreTeam1.runs || 0,
-            wickets: match.scoreTeam1.wickets || 0,
-            overs: match.scoreTeam1.overs || 0
-          } : undefined,
-          scoreTeam2: match.scoreTeam2 ? {
-            runs: match.scoreTeam2.runs || 0,
-            wickets: match.scoreTeam2.wickets || 0,
-            overs: match.scoreTeam2.overs || 0
-          } : undefined
-        })),
-      }));
-
-      setTournaments(formattedTournaments);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch tournaments: " + error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  function generateAccessCode(length = 6) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < length; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  }
+    const loadTournaments = async () => {
+      try {
+        const data = await fetchTournaments();
+        setTournaments(data);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch tournaments: " + error.message,
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadTournaments();
+  }, [toast]);
 
   const addTournament = async (tournament: Omit<Tournament, 'id' | 'teams' | 'matches'>) => {
     try {
-      const accessCode = tournament.accessCode || generateAccessCode();
-      const { data, error } = await supabase
-        .from('tournaments')
-        .insert([{
-          name: tournament.name,
-          type: tournament.type,
-          start_date: tournament.startDate,
-          end_date: tournament.endDate,
-          creator_id: tournament.creatorId,
-          status: tournament.status,
-          venue_city: tournament.venueCity,
-          access_code: accessCode
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newTournament: Tournament = {
-        ...tournament,
-        id: data.id,
-        teams: [],
-        matches: [],
-        accessCode: accessCode
-      };
-
+      const newTournament = await createTournament(tournament);
       setTournaments(prev => [...prev, newTournament]);
+      
       toast({
         title: "Success",
         description: "Tournament created successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -164,30 +92,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateTournament = async (tournament: Tournament) => {
+  const handleUpdateTournament = async (tournament: Tournament) => {
     try {
-      const { error } = await supabase
-        .from('tournaments')
-        .update({
-          name: tournament.name,
-          type: tournament.type,
-          start_date: tournament.startDate,
-          end_date: tournament.endDate,
-          status: tournament.status,
-          venue_city: tournament.venueCity,
-          access_code: tournament.accessCode
-        })
-        .eq('id', tournament.id);
-
-      if (error) throw error;
-
+      await updateTournament(tournament);
+      
       setTournaments(prev => prev.map(t => t.id === tournament.id ? tournament : t));
+      
       toast({
         title: "Success",
         description: "Tournament updated successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -204,40 +118,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addTeam = async (tournamentId: string, team: Omit<Team, 'id' | 'players'>) => {
     try {
-      const { data, error } = await supabase
-        .from('teams')
-        .insert([{
-          name: team.name,
-          logo: team.logo,
-          tournament_id: tournamentId
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newTeam: Team = {
-        ...team,
-        id: data.id,
-        tournamentId,
-        players: []
-      };
-
+      const newTeam = await createTeam(tournamentId, team);
+      
       const tournament = findTournament(tournamentId);
       if (tournament) {
         const updatedTournament = {
           ...tournament,
           teams: [...tournament.teams, newTeam]
         };
-        updateTournament(updatedTournament);
+        handleUpdateTournament(updatedTournament);
       }
 
       toast({
         title: "Success",
         description: "Team added successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -248,17 +143,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateTeam = async (team: Team) => {
+  const handleUpdateTeam = async (team: Team) => {
     try {
-      const { error } = await supabase
-        .from('teams')
-        .update({
-          name: team.name,
-          logo: team.logo
-        })
-        .eq('id', team.id);
-
-      if (error) throw error;
+      await updateTeam(team);
 
       const tournament = findTournament(team.tournamentId);
       if (tournament) {
@@ -266,15 +153,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...tournament,
           teams: tournament.teams.map(t => t.id === team.id ? team : t)
         };
-        updateTournament(updatedTournament);
+        handleUpdateTournament(updatedTournament);
       }
 
       toast({
         title: "Success",
         description: "Team updated successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -287,24 +172,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addPlayer = async (teamId: string, player: Omit<Player, 'id'>) => {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .insert([{
-          name: player.name,
-          role: player.role,
-          team_id: teamId,
-          avatar: player.avatar
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newPlayer: Player = {
-        ...player,
-        id: data.id,
-        teamId
-      };
+      const newPlayer = await createPlayer(teamId, player);
 
       // Update the team's players list
       const team = findTeam(teamId);
@@ -313,15 +181,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...team,
           players: [...team.players, newPlayer]
         };
-        updateTeam(updatedTeam);
+        handleUpdateTeam(updatedTeam);
       }
 
       toast({
         title: "Success",
         description: "Player added successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -332,18 +198,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updatePlayer = async (player: Player) => {
+  const handleUpdatePlayer = async (player: Player) => {
     try {
-      const { error } = await supabase
-        .from('players')
-        .update({
-          name: player.name,
-          role: player.role,
-          avatar: player.avatar
-        })
-        .eq('id', player.id);
-
-      if (error) throw error;
+      await updatePlayer(player);
 
       const team = findTeam(player.teamId);
       if (team) {
@@ -351,15 +208,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...team,
           players: team.players.map(p => p.id === player.id ? player : p)
         };
-        updateTeam(updatedTeam);
+        handleUpdateTeam(updatedTeam);
       }
 
       toast({
         title: "Success",
         description: "Player updated successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -372,27 +227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addMatch = async (tournamentId: string, match: Omit<Match, 'id'>) => {
     try {
-      const { data, error } = await supabase
-        .from('matches')
-        .insert([{
-          team1_id: match.team1Id,
-          team2_id: match.team2Id,
-          date: match.date,
-          venue: match.venue,
-          status: match.status || 'upcoming',
-          tournament_id: tournamentId
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newMatch: Match = {
-        ...match,
-        id: data.id,
-        tournamentId,
-        status: data.status as MatchStatus
-      };
+      const newMatch = await createMatch(tournamentId, match);
 
       const tournament = findTournament(tournamentId);
       if (tournament) {
@@ -400,15 +235,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...tournament,
           matches: [...tournament.matches, newMatch]
         };
-        updateTournament(updatedTournament);
+        handleUpdateTournament(updatedTournament);
       }
 
       toast({
         title: "Success",
         description: "Match added successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -419,32 +252,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateMatch = async (match: Match) => {
+  const handleUpdateMatch = async (match: Match) => {
     try {
-      const updateData: any = {
-        team1_id: match.team1Id,
-        team2_id: match.team2Id,
-        date: match.date,
-        venue: match.venue,
-        status: match.status,
-        result: match.result
-      };
-
-      // Add score data if available
-      if (match.scoreTeam1) {
-        updateData.scoreTeam1 = match.scoreTeam1;
-      }
-      
-      if (match.scoreTeam2) {
-        updateData.scoreTeam2 = match.scoreTeam2;
-      }
-
-      const { error } = await supabase
-        .from('matches')
-        .update(updateData)
-        .eq('id', match.id);
-
-      if (error) throw error;
+      await updateMatch(match);
 
       const tournament = findTournament(match.tournamentId);
       if (tournament) {
@@ -452,15 +262,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...tournament,
           matches: tournament.matches.map(m => m.id === match.id ? match : m)
         };
-        updateTournament(updatedTournament);
+        handleUpdateTournament(updatedTournament);
       }
 
       toast({
         title: "Success",
         description: "Match updated successfully",
       });
-      
-      return;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -487,177 +295,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return undefined;
   };
 
-  const addBallEvent = async (event: Omit<BallEvent, 'id' | 'createdAt'>) => {
+  const handleAddBallEvent = async (event: Omit<BallEvent, 'id' | 'createdAt'>) => {
     try {
-      // Calculate the sequential ball number
-      const ballNumber = (event.over - 1) * 6 + event.ball;
-      
-      // Format the data for the database
-      const ballEventData = {
-        match_id: event.matchId,
-        team_id: event.teamId,
-        inning: event.inning,
-        over: event.over,
-        ball: event.ball,
-        event_type: event.eventType,
-        runs: event.runs,
-        extras: event.extras,
-        batsman_id: event.batsmanId,
-        bowler_id: event.bowlerId,
-        non_striker_id: event.nonStrikerId,
-        is_striker: event.isStriker,
-        wicket_type: event.wicketType,
-        fielder_id: event.fielderId,
-        extras_type: event.extrasType,
-        ball_number: ballNumber // Add calculated sequential ball number
-      };
-
-      const { data, error } = await supabase
-        .from('ball_by_ball')
-        .insert(ballEventData)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Map DB row to BallEvent
-      return {
-        id: data.id,
-        matchId: data.match_id,
-        teamId: data.team_id,
-        inning: data.inning,
-        over: data.over,
-        ball: data.ball,
-        eventType: data.event_type as BallEventType,
-        runs: data.runs,
-        extras: data.extras,
-        batsmanId: data.batsman_id,
-        bowlerId: data.bowler_id,
-        isStriker: data.is_striker,
-        nonStrikerId: data.non_striker_id,
-        wicketType: data.wicket_type as WicketType | undefined,
-        fielderId: data.fielder_id,
-        extrasType: data.extras_type,
-        createdAt: data.created_at
-      };
+      return await addBallEvent(event);
     } catch (error: any) {
-      toast({ title: 'Error', description: 'Failed to add ball event: ' + error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to add ball event: ' + error.message, 
+        variant: 'destructive' 
+      });
       throw error;
     }
   };
 
-  const fetchBallEvents = async (matchId: string, inning: number) => {
+  const handleFetchBallEvents = async (matchId: string, inning: number) => {
     try {
-      const { data, error } = await supabase
-        .from('ball_by_ball')
-        .select('*')
-        .eq('match_id', matchId)
-        .eq('inning', inning)
-        .order('over', { ascending: true })
-        .order('ball', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Map DB rows to BallEvent[]
-      return (data as any[]).map(row => ({
-        id: row.id,
-        matchId: row.match_id,
-        teamId: row.team_id,
-        inning: row.inning,
-        over: row.over,
-        ball: row.ball,
-        eventType: row.event_type as BallEventType,
-        runs: row.runs,
-        extras: row.extras,
-        batsmanId: row.batsman_id,
-        bowlerId: row.bowler_id,
-        isStriker: row.is_striker,
-        nonStrikerId: row.non_striker_id,
-        wicketType: row.wicket_type as WicketType | undefined,
-        fielderId: row.fielder_id,
-        extrasType: row.extras_type,
-        createdAt: row.created_at
-      })) as BallEvent[];
+      return await fetchBallEvents(matchId, inning);
     } catch (error: any) {
-      toast({ title: 'Error', description: 'Failed to fetch ball events: ' + error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to fetch ball events: ' + error.message, 
+        variant: 'destructive' 
+      });
       return [];
     }
   };
 
-  const upsertInningsSummary = async (summary: InningsSummary) => {
+  const handleUpsertInningsSummary = async (summary: InningsSummary) => {
     try {
-      const { error } = await supabase
-        .from('innings_summary')
-        .upsert([
-          {
-            match_id: summary.matchId,
-            inning: summary.inning,
-            total_runs: summary.runs,
-            wickets: summary.wickets,
-            overs: summary.overs,
-            extras: summary.extras,
-            target: summary.target
-          }
-        ], { onConflict: 'match_id,inning' });
-        
-      if (error) throw error;
-      
-      return;
+      await upsertInningsSummary(summary);
     } catch (error: any) {
-      toast({ title: 'Error', description: 'Failed to update innings summary: ' + error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update innings summary: ' + error.message, 
+        variant: 'destructive' 
+      });
       throw error;
     }
   };
 
-  const fetchInningsSummary = async (matchId: string, inning: number) => {
+  const handleFetchInningsSummary = async (matchId: string, inning: number) => {
     try {
-      const { data, error } = await supabase
-        .from('innings_summary')
-        .select('*')
-        .eq('match_id', matchId)
-        .eq('inning', inning)
-        .maybeSingle();
-        
-      if (error && error.code !== 'PGRST116') throw error;
-      if (!data) return null;
-      
-      return {
-        matchId: data.match_id,
-        inning: inning, // Use the passed inning parameter instead of data.inning
-        runs: data.total_runs,
-        wickets: data.wickets,
-        overs: data.overs,
-        extras: data.extras,
-        target: data.target
-      } as InningsSummary;
+      return await fetchInningsSummary(matchId, inning);
     } catch (error: any) {
-      toast({ title: 'Error', description: 'Failed to fetch innings summary: ' + error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to fetch innings summary: ' + error.message, 
+        variant: 'destructive' 
+      });
       return null;
     }
   };
 
-  const fetchTargetScore = async (matchId: string) => {
+  const handleFetchTargetScore = async (matchId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('target_scores')
-        .select('target_runs')
-        .eq('match_id', matchId)
-        .eq('innings_number', 1)
-        .maybeSingle();
-        
-      if (error && error.code !== 'PGRST116') throw error;
-      if (!data) return null;
-      
-      return data.target_runs;
+      return await fetchTargetScore(matchId);
     } catch (error: any) {
-      toast({ title: 'Error', description: 'Failed to fetch target score: ' + error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to fetch target score: ' + error.message, 
+        variant: 'destructive' 
+      });
       return null;
     }
-  };
-
-  const generateShareableLink = (tournament: Tournament) => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/tournament/${tournament.accessCode || tournament.id}`;
   };
 
   return (
@@ -665,23 +365,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         tournaments,
         addTournament,
-        updateTournament,
+        updateTournament: handleUpdateTournament,
         addTeam,
-        updateTeam,
+        updateTeam: handleUpdateTeam,
         addPlayer,
-        updatePlayer,
+        updatePlayer: handleUpdatePlayer,
         addMatch,
-        updateMatch,
+        updateMatch: handleUpdateMatch,
         findTeam,
         findTournament,
         findMatch,
         currentTournament,
         setCurrentTournament,
-        addBallEvent,
-        fetchBallEvents,
-        upsertInningsSummary,
-        fetchInningsSummary,
-        fetchTargetScore,
+        addBallEvent: handleAddBallEvent,
+        fetchBallEvents: handleFetchBallEvents,
+        upsertInningsSummary: handleUpsertInningsSummary,
+        fetchInningsSummary: handleFetchInningsSummary,
+        fetchTargetScore: handleFetchTargetScore,
         generateShareableLink
       }}
     >
@@ -698,110 +398,5 @@ export const useApp = () => {
   return context;
 };
 
-// Define a separate interface for ball event database rows to avoid recursive typing
-interface BallEventRow {
-  id: string;
-  match_id: string;
-  team_id: string;
-  inning: number;
-  over: number;
-  ball: number;
-  event_type: string;
-  runs: number;
-  extras: number;
-  batsman_id: string;
-  bowler_id: string;
-  is_striker: boolean;
-  non_striker_id?: string;
-  wicket_type?: string;
-  fielder_id?: string;
-  extras_type?: string;
-  created_at: string;
-}
-
-// Explicitly map from row type to BallEvent to break the recursive type chain
-function mapRowToBallEvent(row: BallEventRow): BallEvent {
-  return {
-    id: row.id,
-    matchId: row.match_id,
-    teamId: row.team_id,
-    inning: row.inning,
-    over: row.over,
-    ball: row.ball,
-    eventType: row.event_type as BallEventType,
-    runs: row.runs,
-    extras: row.extras,
-    batsmanId: row.batsman_id,
-    bowlerId: row.bowler_id,
-    isStriker: row.is_striker,
-    nonStrikerId: row.non_striker_id,
-    wicketType: row.wicket_type as WicketType | undefined,
-    fielderId: row.fielder_id,
-    extrasType: row.extras_type,
-    createdAt: row.created_at
-  };
-}
-
-// Real-time ball event subscription hook
-export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] {
-  const [events, setEvents] = useState<BallEvent[]>([]);
-  const { toast } = useToast();
-  const supabaseClient = useRef(supabase);
-
-  useEffect(() => {
-    let mounted = true;
-    
-    // Initial fetch with strongly typed handler function
-    const fetchEvents = async () => {
-      try {
-        const { data, error } = await supabaseClient.current
-          .from('ball_by_ball')
-          .select('*')
-          .eq('match_id', matchId)
-          .eq('inning', inning)
-          .order('over', { ascending: true })
-          .order('ball', { ascending: true });
-          
-        if (error) throw error;
-        
-        // Use a strongly typed conversion
-        if (mounted && data) {
-          const mappedEvents: BallEvent[] = (data as BallEventRow[]).map(mapRowToBallEvent);
-          setEvents(mappedEvents);
-        }
-      } catch (error: any) {
-        toast({ 
-          title: 'Error', 
-          description: 'Failed to fetch ball events: ' + error.message, 
-          variant: 'destructive' 
-        });
-      }
-    };
-    
-    fetchEvents();
-    
-    // Subscribe to new events with strongly typed payload
-    type PayloadType = { new: BallEventRow };
-    
-    const channel = supabaseClient.current
-      .channel('ball-by-ball-live')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'ball_by_ball', filter: `match_id=eq.${matchId}` },
-        (payload: PayloadType) => {
-          if (payload.new && payload.new.inning === inning && mounted) {
-            const newEvent = mapRowToBallEvent(payload.new);
-            setEvents(prev => [...prev, newEvent]);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      mounted = false;
-      supabaseClient.current.removeChannel(channel);
-    };
-  }, [matchId, inning, toast]);
-  
-  return events;
-}
+// Re-export the useLiveBallEvents hook for convenience
+export { useLiveBallEvents };
