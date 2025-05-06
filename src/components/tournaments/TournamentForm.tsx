@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,10 +20,11 @@ const tournamentSchema = z.object({
 type TournamentFormData = z.infer<typeof tournamentSchema>;
 
 interface TournamentFormProps {
-  onSubmit: (data: TournamentFormData) => void;
+  onSubmit: (data: TournamentFormData) => Promise<void>;
 }
 
 const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, control, formState: { errors } } = useForm<TournamentFormData>({
     resolver: zodResolver(tournamentSchema),
     defaultValues: {
@@ -32,19 +32,31 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
     },
   });
 
+  const onFormSubmit = async (data: TournamentFormData) => {
+    try {
+      setIsSubmitting(true);
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Create New Tournament</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Tournament Name</Label>
             <Input
               id="name"
               placeholder="Enter tournament name"
               {...register('name')}
+              disabled={isSubmitting}
             />
             {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
@@ -59,6 +71,7 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
                   defaultValue={field.value}
                   onValueChange={field.onChange}
                   className="flex gap-4"
+                  disabled={isSubmitting}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="league" id="league" />
@@ -74,26 +87,26 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
             {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                {...register('startDate')}
-              />
-              {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              {...register('startDate')}
+              disabled={isSubmitting}
+            />
+            {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate.message}</p>}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                {...register('endDate')}
-              />
-              {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate">End Date</Label>
+            <Input
+              id="endDate"
+              type="date"
+              {...register('endDate')}
+              disabled={isSubmitting}
+            />
+            {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -102,12 +115,17 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
               id="venueCity"
               placeholder="Enter venue city"
               {...register('venueCity')}
+              disabled={isSubmitting}
             />
             {errors.venueCity && <p className="text-red-500 text-sm">{errors.venueCity.message}</p>}
           </div>
 
-          <Button type="submit" className="w-full bg-cricket-navy hover:bg-cricket-navy-light">
-            Create Tournament
+          <Button 
+            type="submit" 
+            className="w-full bg-cricket-navy hover:bg-cricket-navy-light"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creating...' : 'Create Tournament'}
           </Button>
         </form>
       </CardContent>

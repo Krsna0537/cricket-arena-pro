@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,13 +17,14 @@ import { AlertCircle, Plus } from 'lucide-react';
 
 const TournamentDetailPage = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const { findTournament, updateTournament, addTeam, addPlayer } = useApp();
+  const { findTournament, updateTournament, addTeam, addPlayer, addMatch, updateMatch } = useApp();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     if (tournamentId) {
@@ -83,24 +83,26 @@ const TournamentDetailPage = () => {
     }
   };
 
-  const handleScheduleMatch = (data: any) => {
-    const newMatch = {
-      team1Id: data.team1Id,
-      team2Id: data.team2Id,
-      date: data.date,
-      venue: data.venue,
-      status: 'upcoming' as const,
-      tournamentId: tournament.id
-    };
-    
-    const updatedTournament = {
-      ...tournament,
-      matches: [...tournament.matches, { ...newMatch, id: Math.random().toString(36).substring(2, 10) }]
-    };
-    
-    updateTournament(updatedTournament);
-    setShowScheduleForm(false);
-    setTournament(updatedTournament);
+  const handleScheduleMatch = async (data: any) => {
+    try {
+      await addMatch(tournament.id, {
+        team1Id: data.team1Id,
+        team2Id: data.team2Id,
+        date: data.date,
+        venue: data.venue,
+        status: 'upcoming' as const,
+        tournamentId: tournament.id
+      });
+      setShowScheduleForm(false);
+      
+      // Refresh tournament data
+      const updated = findTournament(tournament.id);
+      if (updated) {
+        setTournament(updated);
+      }
+    } catch (error) {
+      console.error('Failed to schedule match:', error);
+    }
   };
 
   const handleUpdateMatch = (updatedMatch: any) => {
@@ -152,6 +154,26 @@ const TournamentDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Sharable Link/Code Section */}
+      <Card className="border-blue-400">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span>Sharable Tournament Link</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row md:items-center gap-2">
+            <div>
+              <span className="font-semibold">Code:</span> <span className="text-blue-700 font-mono">{tournament.accessCode}</span>
+            </div>
+            <div>
+              <span className="font-semibold">Link:</span> <span className="text-blue-700 font-mono">{`${window.location.origin}/tournament/${tournament.accessCode}`}</span>
+              <Button size="sm" className="ml-2" onClick={() => {navigator.clipboard.writeText(`${window.location.origin}/tournament/${tournament.accessCode}`);}}>Copy Link</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="teams" className="w-full">
         <TabsList className="grid grid-cols-3 md:w-[400px]">
@@ -300,12 +322,29 @@ const TournamentDetailPage = () => {
                 </CardContent>
               </Card>
             ) : selectedMatchId && selectedMatch ? (
-              <LiveScoring 
-                match={selectedMatch} 
-                team1={team1!} 
-                team2={team2!}
-                onUpdateScore={handleUpdateMatch}
-              />
+              <>
+                {selectedMatch.status !== 'live' && (
+                  <Button
+                    className="mb-4 bg-green-600 hover:bg-green-700"
+                    onClick={async () => {
+                      await updateMatch({ ...selectedMatch, status: 'live' });
+                      // Refresh tournament data
+                      const updated = findTournament(tournament.id);
+                      if (updated) {
+                        setTournament(updated);
+                      }
+                    }}
+                  >
+                    Start Match
+                  </Button>
+                )}
+                <LiveScoring 
+                  match={selectedMatch} 
+                  team1={team1!} 
+                  team2={team2!}
+                  onUpdateScore={handleUpdateMatch}
+                />
+              </>
             ) : (
               <div className="space-y-4">
                 <p className="text-gray-500">Select a match to start live scoring:</p>

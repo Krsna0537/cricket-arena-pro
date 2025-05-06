@@ -417,6 +417,107 @@ export type Database = {
         }
         Relationships: []
       }
+      innings_summary: {
+        Row: {
+          match_id: string;
+          inning: number;
+          runs: number;
+          wickets: number;
+          overs: number;
+          updated_at: string;
+        }
+        Insert: {
+          match_id: string;
+          inning: number;
+          runs: number;
+          wickets: number;
+          overs: number;
+          updated_at?: string;
+        }
+        Update: {
+          match_id?: string;
+          inning?: number;
+          runs?: number;
+          wickets?: number;
+          overs?: number;
+          updated_at?: string;
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innings_summary_match_id_fkey";
+            columns: ["match_id"];
+            isOneToOne: false;
+            referencedRelation: "matches";
+            referencedColumns: ["id"];
+          },
+        ]
+      }
+      ball_by_ball: {
+        Row: {
+          id: string;
+          match_id: string;
+          team_id: string;
+          inning: number;
+          over: number;
+          ball: number;
+          event_type: string;
+          runs: number;
+          extras: number;
+          batsman_id: string;
+          bowler_id: string;
+          is_striker: boolean;
+          created_at: string;
+          updated_at: string;
+        }
+        Insert: {
+          id?: string;
+          match_id: string;
+          team_id: string;
+          inning: number;
+          over: number;
+          ball: number;
+          event_type: string;
+          runs: number;
+          extras: number;
+          batsman_id: string;
+          bowler_id: string;
+          is_striker: boolean;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Update: {
+          id?: string;
+          match_id?: string;
+          team_id?: string;
+          inning?: number;
+          over?: number;
+          ball?: number;
+          event_type?: string;
+          runs?: number;
+          extras?: number;
+          batsman_id?: string;
+          bowler_id?: string;
+          is_striker?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ball_by_ball_match_id_fkey";
+            columns: ["match_id"];
+            isOneToOne: false;
+            referencedRelation: "matches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ball_by_ball_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

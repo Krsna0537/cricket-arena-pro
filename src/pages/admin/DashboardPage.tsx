@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,17 +17,20 @@ const DashboardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Future integration with Supabase for fetching tournaments
     setIsLoading(false);
-  }, []);
+  }, [tournaments]);
 
-  const handleCreateTournament = (data: any) => {
-    addTournament({
-      ...data,
-      creatorId: user?.id || 'unknown', // Using the logged-in user ID
-      status: 'upcoming'
-    });
-    setShowCreateForm(false);
+  const handleCreateTournament = async (data: any) => {
+    try {
+      await addTournament({
+        ...data,
+        creatorId: user?.id || 'unknown',
+        status: 'upcoming'
+      });
+      setShowCreateForm(false);
+    } catch (error) {
+      console.error('Failed to create tournament:', error);
+    }
   };
 
   if (isLoading) {

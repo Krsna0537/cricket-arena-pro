@@ -1,4 +1,3 @@
-
 export type TournamentType = 'league' | 'knockout';
 
 export type PlayerRole = 'batsman' | 'bowler' | 'all-rounder' | 'keeper';
@@ -74,4 +73,31 @@ export interface Leaderboard {
   lost: number;
   points: number;
   netRunRate?: number;
+}
+
+// --- New types for ball-by-ball scoring ---
+export type BallEventType = 'run' | 'wicket' | 'wide' | 'no-ball' | 'bye' | 'leg-bye';
+
+export interface BallEvent {
+  id: string;
+  matchId: string;
+  teamId: string;
+  inning: number; // 1 or 2
+  over: number;
+  ball: number; // ball number in the over
+  eventType: BallEventType;
+  runs: number; // runs scored off the bat
+  extras: number; // extras (wides, no-balls, byes, leg-byes)
+  batsmanId: string;
+  bowlerId: string;
+  isStriker: boolean;
+  createdAt?: string;
+}
+
+export interface InningsSummary {
+  matchId: string;
+  inning: number;
+  runs: number;
+  wickets: number;
+  overs: number;
 }
