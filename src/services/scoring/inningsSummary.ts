@@ -24,8 +24,9 @@ export async function upsertInningsSummary(summary: InningsSummary): Promise<voi
   }
 }
 
-// Define the interface for innings summary database rows
+// Define a simple interface that matches the exact database structure
 interface InningsSummaryRow {
+  id?: string;
   match_id: string;
   inning: number;
   total_runs: number;
@@ -35,13 +36,12 @@ interface InningsSummaryRow {
   target?: number;
   batting_team_id?: string;
   created_at?: string;
-  id?: string;
   updated_at?: string;
 }
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Use a simple query approach with a string-based column selector to avoid type recursion
+    // Use a string-based query to avoid TypeScript recursion issues
     const { data, error } = await supabase
       .from('innings_summary')
       .select('*')
@@ -56,10 +56,11 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
       return null;
     }
     
-    // Cast the raw data to a known structure to avoid deep type inference
-    const row = data[0] as any;
+    // Safely cast the data to our known row structure
+    // Using unknown as an intermediate step breaks the type inference chain
+    const row = data[0] as unknown as InningsSummaryRow;
     
-    // Map database row to domain type
+    // Map database row to domain type with explicit field mapping
     return {
       matchId: row.match_id,
       inning: row.inning,
