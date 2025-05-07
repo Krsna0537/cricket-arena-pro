@@ -1,7 +1,23 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { BallEventResponse, InningsSummary, TeamInningsSummary } from '../scoring/index';
-import { getStrikeRate, getEconomy } from './utils';
+import { InningsSummary, TeamInningsSummary } from '../scoring/index';
+
+/**
+ * Interface for database row structure
+ */
+interface InningsSummaryRow {
+  match_id: string;
+  team1_id: string;
+  team2_id: string;
+  team1_score: number;
+  team1_wickets: number;
+  team1_overs: number;
+  team2_score: number;
+  team2_wickets: number;
+  team2_overs: number;
+  current_innings: number;
+  status: string;
+}
 
 /**
  * Gets the latest innings summary for a match
@@ -10,22 +26,8 @@ import { getStrikeRate, getEconomy } from './utils';
  */
 export const getInningsSummary = async (matchId: string): Promise<InningsSummary | undefined> => {
   try {
-    interface InningsSummaryRow {
-      match_id: string;
-      team1_id: string;
-      team2_id: string;
-      team1_score: number;
-      team1_wickets: number;
-      team1_overs: number;
-      team2_score: number;
-      team2_wickets: number;
-      team2_overs: number;
-      current_innings: number;
-      status: string;
-    }
-
     const { data, error } = await supabase
-      .from('innings_summaries')
+      .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
       .single();
@@ -66,7 +68,7 @@ export const getInningsSummary = async (matchId: string): Promise<InningsSummary
  */
 export const upsertInningsSummary = async (summary: InningsSummary): Promise<void> => {
   try {
-    const { error } = await supabase.from('innings_summaries').upsert({
+    const { error } = await supabase.from('innings_summary').upsert({
       match_id: summary.matchId,
       team1_id: summary.team1.teamId,
       team2_id: summary.team2.teamId,
@@ -85,6 +87,18 @@ export const upsertInningsSummary = async (summary: InningsSummary): Promise<voi
     }
   } catch (error) {
     console.error('Error in upsertInningsSummary:', error);
+  }
+};
+
+// Function to fetch innings summary by match ID and inning number
+export const fetchInningsSummary = async (matchId: string, inning: number): Promise<InningsSummary | null> => {
+  try {
+    const summary = await getInningsSummary(matchId);
+    if (!summary) return null;
+    return summary;
+  } catch (error) {
+    console.error('Error fetching innings summary:', error);
+    return null;
   }
 };
 
