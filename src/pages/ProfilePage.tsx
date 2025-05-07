@@ -65,9 +65,10 @@ const ProfilePage = () => {
     <div className="container max-w-4xl mx-auto py-6 relative">
       <div className="absolute top-0 right-0 -z-10 opacity-5">
         <img 
-          src="/images/cricket-player-silhouette.png" 
+          src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80"
           alt="Cricket Player" 
-          className="h-96"
+          className="h-96 object-contain"
+          loading="lazy"
         />
       </div>
       

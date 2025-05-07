@@ -85,9 +85,10 @@ const DashboardPage = () => {
     <div className="space-y-6 relative">
       <div className="absolute top-0 right-0 -z-10 opacity-5">
         <img 
-          src="/images/cricket-ground.jpg" 
+          src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&q=80"
           alt="Cricket Ground" 
           className="h-64 w-64 object-cover rounded-bl-3xl"
+          loading="lazy"
         />
       </div>
 
@@ -137,9 +138,10 @@ const DashboardPage = () => {
       <Card className="bg-cricket-navy/5 border-cricket-navy/20 relative overflow-hidden">
         <div className="absolute bottom-0 right-0 opacity-5">
           <img 
-            src="/images/cricket-bat-ball.png" 
+            src="https://images.unsplash.com/photo-1613099051607-9f28253d42af?auto=format&fit=crop&q=80"
             alt="Cricket Equipment" 
-            className="h-64"
+            className="h-64 object-contain"
+            loading="lazy"
           />
         </div>
         <CardHeader>

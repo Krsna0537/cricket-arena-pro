@@ -8,9 +8,10 @@ const NotFound = () => {
     <div className="min-h-[80vh] flex flex-col items-center justify-center relative">
       <div className="absolute inset-0 flex items-center justify-center opacity-5 z-0">
         <img 
-          src="/images/cricket-stumps.png" 
-          alt="Cricket Stumps" 
+          src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&q=80"
+          alt="Cricket Field" 
           className="h-96 object-contain"
+          loading="lazy"
         />
       </div>
       <div className="text-center space-y-4 relative z-10">

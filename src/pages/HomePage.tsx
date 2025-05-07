@@ -15,9 +15,10 @@ const HomePage = () => {
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <img 
-            src="/images/cricket-field.jpg" 
+            src="https://images.unsplash.com/photo-1629285483773-6b5cde7df3d0?auto=format&fit=crop&q=80"
             alt="Cricket Field" 
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         </div>
         <div className="container px-4 md:px-6 relative z-10">
@@ -75,9 +76,10 @@ const HomePage = () => {
             <div className="flex items-center justify-center">
               <div className="relative h-[350px] w-[350px] md:h-[450px] md:w-[450px]">
                 <img 
-                  src="/images/cricket-trophy.png" 
+                  src="https://images.unsplash.com/photo-1571751239008-50cad6cb9265?auto=format&fit=crop&q=80"
                   alt="Cricket Trophy" 
                   className="absolute inset-0 h-full w-full object-contain z-10"
+                  loading="lazy"
                 />
                 <Trophy className="absolute inset-0 h-full w-full text-cricket-accent opacity-20" />
               </div>
@@ -158,9 +160,10 @@ const HomePage = () => {
         <div className="container px-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 opacity-10 -z-10">
             <img 
-              src="/images/cricket-stadium.jpg" 
+              src="https://images.unsplash.com/photo-1630395822970-acd6a691d97e?auto=format&fit=crop&q=80"
               alt="Cricket Stadium" 
               className="w-64 h-64 object-cover"
+              loading="lazy"
             />
           </div>
           <div className="mx-auto max-w-md text-center">
