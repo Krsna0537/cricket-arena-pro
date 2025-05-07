@@ -20,7 +20,6 @@ export type Database = {
           created_at: string | null
           event_type: string
           extras: number
-          extras_runs: number | null
           extras_type: string | null
           fielder_id: string | null
           id: string
@@ -44,7 +43,6 @@ export type Database = {
           created_at?: string | null
           event_type?: string
           extras?: number
-          extras_runs?: number | null
           extras_type?: string | null
           fielder_id?: string | null
           id?: string
@@ -68,7 +66,6 @@ export type Database = {
           created_at?: string | null
           event_type?: string
           extras?: number
-          extras_runs?: number | null
           extras_type?: string | null
           fielder_id?: string | null
           id?: string
