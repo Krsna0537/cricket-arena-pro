@@ -41,7 +41,7 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Use a more direct query approach to avoid deep type inference issues
+    // Use a simple query approach with a string-based column selector to avoid type recursion
     const { data, error } = await supabase
       .from('innings_summary')
       .select('*')
@@ -56,21 +56,8 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
       return null;
     }
     
-    // Use type assertion with intermediate step to break the inference chain
-    const rawRow = data[0];
-    const row: InningsSummaryRow = {
-      match_id: rawRow.match_id,
-      inning: rawRow.inning,
-      total_runs: rawRow.total_runs,
-      wickets: rawRow.wickets,
-      overs: rawRow.overs,
-      extras: rawRow.extras,
-      target: rawRow.target,
-      batting_team_id: rawRow.batting_team_id,
-      created_at: rawRow.created_at,
-      id: rawRow.id,
-      updated_at: rawRow.updated_at
-    };
+    // Cast the raw data to a known structure to avoid deep type inference
+    const row = data[0] as any;
     
     // Map database row to domain type
     return {
