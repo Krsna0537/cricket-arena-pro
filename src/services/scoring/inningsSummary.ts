@@ -41,23 +41,36 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Execute the query with minimal chaining
-    const result = await supabase
+    // Use a more direct query approach to avoid deep type inference issues
+    const { data, error } = await supabase
       .from('innings_summary')
-      .select()
+      .select('*')
       .eq('match_id', matchId)
-      .eq('inning', inning);
+      .eq('inning', inning)
+      .limit(1);
     
-    // Handle potential error
-    if (result.error) throw result.error;
+    if (error) throw error;
     
     // Check if we have data
-    if (!result.data || result.data.length === 0) {
+    if (!data || data.length === 0) {
       return null;
     }
     
-    // Cast the result row to the correct type, completely avoiding TypeScript's inference
-    const row = result.data[0] as unknown as InningsSummaryRow;
+    // Use type assertion with intermediate step to break the inference chain
+    const rawRow = data[0];
+    const row: InningsSummaryRow = {
+      match_id: rawRow.match_id,
+      inning: rawRow.inning,
+      total_runs: rawRow.total_runs,
+      wickets: rawRow.wickets,
+      overs: rawRow.overs,
+      extras: rawRow.extras,
+      target: rawRow.target,
+      batting_team_id: rawRow.batting_team_id,
+      created_at: rawRow.created_at,
+      id: rawRow.id,
+      updated_at: rawRow.updated_at
+    };
     
     // Map database row to domain type
     return {
