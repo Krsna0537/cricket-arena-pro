@@ -27,6 +27,7 @@ export async function upsertInningsSummary(summary: InningsSummary): Promise<voi
 // Define the interface for innings summary database rows
 interface InningsSummaryRow {
   match_id: string;
+  inning: number;
   total_runs: number;
   wickets: number;
   overs: number;
@@ -41,17 +42,18 @@ interface InningsSummaryRow {
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
     // Explicitly type the query result to avoid deep type instantiation
-    type QueryResultType = { data: InningsSummaryRow | null, error: any };
+    interface QueryResult {
+      data: InningsSummaryRow | null;
+      error: any;
+    }
     
     // Use explicit type casting to break potential type inference loops
-    const result = await supabase
+    const { data, error } = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
       .eq('inning', inning)
-      .maybeSingle() as QueryResultType;
-      
-    const { data, error } = result;
+      .maybeSingle() as QueryResult;
       
     if (error && error.code !== 'PGRST116') throw error;
     if (!data) return null;
@@ -59,7 +61,7 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
     // Map the database row to our domain type
     return {
       matchId: data.match_id,
-      inning, // Use the inning parameter we passed in
+      inning: data.inning,
       runs: data.total_runs,
       wickets: data.wickets,
       overs: data.overs,
