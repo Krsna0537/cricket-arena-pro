@@ -41,32 +41,39 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Explicitly type the query result to avoid deep type instantiation
-    interface QueryResult {
-      data: InningsSummaryRow | null;
-      error: any;
-    }
-    
-    // Use explicit type casting to break potential type inference loops
-    const { data, error } = await supabase
+    // Instead of using complex typing with maybeSingle, break it into simpler steps
+    const result = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
-      .eq('inning', inning)
-      .maybeSingle() as QueryResult;
-      
-    if (error && error.code !== 'PGRST116') throw error;
-    if (!data) return null;
+      .eq('inning', inning);
+    
+    // Handle errors
+    if (result.error) {
+      if (result.error.code !== 'PGRST116') { // Ignore "no rows returned" error
+        throw result.error;
+      }
+      return null;
+    }
+    
+    // Check if we have data
+    const data = result.data as InningsSummaryRow[] | null;
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Map the first row to our domain type
+    const row = data[0];
     
     // Map the database row to our domain type
     return {
-      matchId: data.match_id,
-      inning: data.inning,
-      runs: data.total_runs,
-      wickets: data.wickets,
-      overs: data.overs,
-      extras: data.extras,
-      target: data.target
+      matchId: row.match_id,
+      inning: row.inning,
+      runs: row.total_runs,
+      wickets: row.wickets,
+      overs: row.overs,
+      extras: row.extras,
+      target: row.target
     };
   } catch (error) {
     throw error;
