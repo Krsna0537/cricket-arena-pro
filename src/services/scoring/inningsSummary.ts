@@ -41,26 +41,27 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Use a raw query approach to avoid complex type inference
-    const { data, error } = await supabase
+    // Use type assertion to avoid deep type inference
+    const response = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
-      .eq('inning', inning);
+      .eq('inning', inning)
+      .limit(1);
     
-    // Handle errors
-    if (error) {
-      throw error;
+    if (response.error) {
+      throw response.error;
     }
     
     // Check if we have data
-    if (!data || data.length === 0) {
+    if (!response.data || response.data.length === 0) {
       return null;
     }
     
-    // Get the first row and map it to our domain type
-    const row = data[0] as InningsSummaryRow;
+    // Explicitly cast the first row to our row type
+    const row = response.data[0] as InningsSummaryRow;
     
+    // Map database row to domain type
     return {
       matchId: row.match_id,
       inning: row.inning,
