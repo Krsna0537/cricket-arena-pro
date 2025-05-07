@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Tournament, Team, Player, Match, TournamentType, MatchStatus, BallEvent, InningsSummary } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,7 +20,8 @@ import {
   fetchBallEvents,
   upsertInningsSummary,
   fetchInningsSummary,
-  fetchTargetScore
+  fetchTargetScore,
+  convertToDbInningsSummary
 } from '@/services/scoringService';
 import { useLiveBallEvents } from '@/hooks/useLiveBallEvents';
 
@@ -323,7 +323,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleUpsertInningsSummary = async (summary: InningsSummary) => {
     try {
-      await upsertInningsSummary(summary);
+      // Convert app model to DB model before sending to the service function
+      const dbSummary = convertToDbInningsSummary(summary, summary.matchId);
+      await upsertInningsSummary(dbSummary);
     } catch (error: any) {
       toast({ 
         title: 'Error', 

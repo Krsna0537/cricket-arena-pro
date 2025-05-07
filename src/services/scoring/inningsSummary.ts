@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { DbInningsSummary, TeamInningsSummary } from '../scoring/index';
+import { DbInningsSummary, TeamInningsSummary } from './index';
 import { InningsSummary } from '@/types';
 
 /**
@@ -94,6 +94,30 @@ export const upsertInningsSummary = async (summary: DbInningsSummary): Promise<v
   } catch (error) {
     console.error('Error in upsertInningsSummary:', error);
   }
+};
+
+/**
+ * Convert app model InningsSummary to database model DbInningsSummary
+ * This function bridges the gap between the application and database models
+ */
+export const convertToDbInningsSummary = (appSummary: InningsSummary, matchId: string): DbInningsSummary => {
+  return {
+    matchId,
+    team1: {
+      teamId: appSummary.inning === 1 ? 'team1' : 'team2', // These would need to be actual team IDs
+      score: appSummary.runs,
+      wickets: appSummary.wickets,
+      overs: appSummary.overs
+    },
+    team2: {
+      teamId: appSummary.inning === 1 ? 'team2' : 'team1', // These would need to be actual team IDs
+      score: 0, // Default values for the other team
+      wickets: 0,
+      overs: 0
+    },
+    currentInnings: appSummary.inning,
+    status: 'in-progress'
+  };
 };
 
 /**
