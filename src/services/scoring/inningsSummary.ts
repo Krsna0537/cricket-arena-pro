@@ -1,82 +1,91 @@
 
-import { InningsSummary } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { BallEventResponse, InningsSummary, TeamInningsSummary } from '../scoring/index';
+import { getStrikeRate, getEconomy } from './utils';
 
-export async function upsertInningsSummary(summary: InningsSummary): Promise<void> {
+/**
+ * Gets the latest innings summary for a match
+ * @param matchId The match ID to retrieve innings summary for
+ * @returns Promise with innings summary or undefined if not found
+ */
+export const getInningsSummary = async (matchId: string): Promise<InningsSummary | undefined> => {
   try {
-    const { error } = await supabase
-      .from('innings_summary')
-      .upsert([
-        {
-          match_id: summary.matchId,
-          inning: summary.inning,
-          total_runs: summary.runs,
-          wickets: summary.wickets,
-          overs: summary.overs,
-          extras: summary.extras,
-          target: summary.target
-        }
-      ], { onConflict: 'match_id,inning' });
-      
-    if (error) throw error;
-  } catch (error) {
-    throw error;
-  }
-}
+    interface InningsSummaryRow {
+      match_id: string;
+      team1_id: string;
+      team2_id: string;
+      team1_score: number;
+      team1_wickets: number;
+      team1_overs: number;
+      team2_score: number;
+      team2_wickets: number;
+      team2_overs: number;
+      current_innings: number;
+      status: string;
+    }
 
-// Define a simple interface that matches the exact database structure
-interface InningsSummaryRow {
-  id?: string;
-  match_id: string;
-  inning: number;
-  total_runs: number;
-  wickets: number;
-  overs: number;
-  extras?: number;
-  target?: number;
-  batting_team_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
-  try {
-    // Use a simple string-based query to avoid TypeScript recursion issues
     const { data, error } = await supabase
-      .from('innings_summary')
+      .from('innings_summaries')
       .select('*')
       .eq('match_id', matchId)
-      .eq('inning', inning)
       .single();
-    
-    if (error) {
-      // Check if it's just a "not found" error which isn't a true error
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      throw error;
+
+    if (error || !data) {
+      console.error('Error fetching innings summary:', error);
+      return undefined;
     }
-    
-    // Check if we have data
-    if (!data) {
-      return null;
-    }
-    
-    // Cast the data to our known row structure
-    const row = data as unknown as InningsSummaryRow;
-    
-    // Map database row to domain type with explicit field mapping
+
+    // Convert from database model to domain model
+    const row = data as InningsSummaryRow;
+
     return {
       matchId: row.match_id,
-      inning: row.inning,
-      runs: row.total_runs,
-      wickets: row.wickets,
-      overs: row.overs,
-      extras: row.extras || 0,
-      target: row.target
+      team1: {
+        teamId: row.team1_id,
+        score: row.team1_score,
+        wickets: row.team1_wickets,
+        overs: row.team1_overs
+      },
+      team2: {
+        teamId: row.team2_id,
+        score: row.team2_score,
+        wickets: row.team2_wickets,
+        overs: row.team2_overs
+      },
+      currentInnings: row.current_innings,
+      status: row.status
     };
   } catch (error) {
-    console.error("Error fetching innings summary:", error);
-    throw error;
+    console.error('Error in getInningsSummary:', error);
+    return undefined;
   }
-}
+};
+
+/**
+ * Upserts (inserts or updates) innings summary data for a match
+ */
+export const upsertInningsSummary = async (summary: InningsSummary): Promise<void> => {
+  try {
+    const { error } = await supabase.from('innings_summaries').upsert({
+      match_id: summary.matchId,
+      team1_id: summary.team1.teamId,
+      team2_id: summary.team2.teamId,
+      team1_score: summary.team1.score,
+      team1_wickets: summary.team1.wickets,
+      team1_overs: summary.team1.overs,
+      team2_score: summary.team2.score,
+      team2_wickets: summary.team2.wickets,
+      team2_overs: summary.team2.overs,
+      current_innings: summary.currentInnings,
+      status: summary.status
+    });
+
+    if (error) {
+      console.error('Error upserting innings summary:', error);
+    }
+  } catch (error) {
+    console.error('Error in upsertInningsSummary:', error);
+  }
+};
+
+// Additional functions related to innings summary...

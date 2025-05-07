@@ -12,15 +12,6 @@ const HomePage = () => {
   return (
     <div className="min-h-screen">
       <div className="relative overflow-hidden bg-cricket-navy text-white py-16 md:py-24">
-        {/* Background pattern */}
-        <div className="absolute inset-0 z-0 opacity-10">
-          <img 
-            src="https://images.unsplash.com/photo-1629285483773-6b5cde7df3d0?auto=format&fit=crop&q=80"
-            alt="Cricket Field" 
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
         <div className="container px-4 md:px-6 relative z-10">
           <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
             <div className="flex flex-col justify-center space-y-4">
@@ -75,13 +66,7 @@ const HomePage = () => {
             </div>
             <div className="flex items-center justify-center">
               <div className="relative h-[350px] w-[350px] md:h-[450px] md:w-[450px]">
-                <img 
-                  src="https://images.unsplash.com/photo-1571751239008-50cad6cb9265?auto=format&fit=crop&q=80"
-                  alt="Cricket Trophy" 
-                  className="absolute inset-0 h-full w-full object-contain z-10"
-                  loading="lazy"
-                />
-                <Trophy className="absolute inset-0 h-full w-full text-cricket-accent opacity-20" />
+                <Trophy className="h-full w-full text-cricket-accent opacity-20" />
               </div>
             </div>
           </div>
@@ -157,15 +142,7 @@ const HomePage = () => {
       </div>
 
       <div className="bg-gray-50 py-12">
-        <div className="container px-4 relative overflow-hidden">
-          <div className="absolute top-0 right-0 opacity-10 -z-10">
-            <img 
-              src="https://images.unsplash.com/photo-1630395822970-acd6a691d97e?auto=format&fit=crop&q=80"
-              alt="Cricket Stadium" 
-              className="w-64 h-64 object-cover"
-              loading="lazy"
-            />
-          </div>
+        <div className="container px-4">
           <div className="mx-auto max-w-md text-center">
             <h2 className="text-2xl font-bold">Join a Tournament</h2>
             <p className="mt-2 text-gray-600">

@@ -62,16 +62,7 @@ const ProfilePage = () => {
   const fullName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'User';
 
   return (
-    <div className="container max-w-4xl mx-auto py-6 relative">
-      <div className="absolute top-0 right-0 -z-10 opacity-5">
-        <img 
-          src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80"
-          alt="Cricket Player" 
-          className="h-96 object-contain"
-          loading="lazy"
-        />
-      </div>
-      
+    <div className="container max-w-4xl mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

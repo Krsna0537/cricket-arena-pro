@@ -82,16 +82,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6 relative">
-      <div className="absolute top-0 right-0 -z-10 opacity-5">
-        <img 
-          src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&q=80"
-          alt="Cricket Ground" 
-          className="h-64 w-64 object-cover rounded-bl-3xl"
-          loading="lazy"
-        />
-      </div>
-
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tournaments</h1>
@@ -135,15 +126,7 @@ const DashboardPage = () => {
         </Card>
       )}
 
-      <Card className="bg-cricket-navy/5 border-cricket-navy/20 relative overflow-hidden">
-        <div className="absolute bottom-0 right-0 opacity-5">
-          <img 
-            src="https://images.unsplash.com/photo-1613099051607-9f28253d42af?auto=format&fit=crop&q=80"
-            alt="Cricket Equipment" 
-            className="h-64 object-contain"
-            loading="lazy"
-          />
-        </div>
+      <Card className="bg-cricket-navy/5 border-cricket-navy/20">
         <CardHeader>
           <CardTitle className="text-cricket-navy">Quick Stats</CardTitle>
         </CardHeader>
