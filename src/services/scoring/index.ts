@@ -5,7 +5,7 @@ export * from './inningsSummary';
 export * from './targetScore';
 export * from './utils';
 
-// Define interfaces needed by multiple modules
+// Define interfaces needed for database representation
 export interface TeamInningsSummary {
   teamId: string;
   score: number;
@@ -13,7 +13,8 @@ export interface TeamInningsSummary {
   overs: number;
 }
 
-export interface InningsSummary {
+// This is the DB representation of innings summary
+export interface DbInningsSummary {
   matchId: string;
   team1: TeamInningsSummary;
   team2: TeamInningsSummary;
@@ -21,5 +22,5 @@ export interface InningsSummary {
   status: string;
 }
 
-// Alias for backward compatibility
+// Export type alias for backward compatibility
 export type BallEventResponse = any;
