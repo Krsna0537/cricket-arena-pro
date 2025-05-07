@@ -41,24 +41,29 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Use a string-based query to avoid TypeScript recursion issues
+    // Use a simple string-based query to avoid TypeScript recursion issues
     const { data, error } = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
       .eq('inning', inning)
-      .limit(1);
+      .single();
     
-    if (error) throw error;
+    if (error) {
+      // Check if it's just a "not found" error which isn't a true error
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw error;
+    }
     
     // Check if we have data
-    if (!data || data.length === 0) {
+    if (!data) {
       return null;
     }
     
-    // Safely cast the data to our known row structure
-    // Using unknown as an intermediate step breaks the type inference chain
-    const row = data[0] as unknown as InningsSummaryRow;
+    // Cast the data to our known row structure
+    const row = data as unknown as InningsSummaryRow;
     
     // Map database row to domain type with explicit field mapping
     return {
@@ -67,10 +72,11 @@ export async function fetchInningsSummary(matchId: string, inning: number): Prom
       runs: row.total_runs,
       wickets: row.wickets,
       overs: row.overs,
-      extras: row.extras,
+      extras: row.extras || 0,
       target: row.target
     };
   } catch (error) {
+    console.error("Error fetching innings summary:", error);
     throw error;
   }
 }

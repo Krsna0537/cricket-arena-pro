@@ -42,10 +42,25 @@ const JoinTournamentPage = () => {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-10">
+    <div className="container max-w-4xl mx-auto py-10 relative">
+      <div className="absolute top-0 right-0 -z-10 opacity-10">
+        <img 
+          src="/images/cricket-scoreboard.jpg" 
+          alt="Cricket Scoreboard" 
+          className="h-64 w-64 object-cover rounded-bl-3xl"
+        />
+      </div>
+
       <h1 className="text-3xl font-bold mb-6 text-center">Join a Tournament</h1>
       
-      <Card className="mb-8">
+      <Card className="mb-8 relative overflow-hidden">
+        <div className="absolute -right-20 bottom-0 opacity-5">
+          <img 
+            src="/images/cricket-ticket.png" 
+            alt="Tournament Ticket" 
+            className="h-64"
+          />
+        </div>
         <CardHeader>
           <CardTitle>Enter Tournament Code</CardTitle>
           <CardDescription>

@@ -12,7 +12,15 @@ const HomePage = () => {
   return (
     <div className="min-h-screen">
       <div className="relative overflow-hidden bg-cricket-navy text-white py-16 md:py-24">
-        <div className="container px-4 md:px-6">
+        {/* Background pattern */}
+        <div className="absolute inset-0 z-0 opacity-10">
+          <img 
+            src="/images/cricket-field.jpg" 
+            alt="Cricket Field" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="container px-4 md:px-6 relative z-10">
           <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
             <div className="flex flex-col justify-center space-y-4">
               <div className="space-y-2">
@@ -66,6 +74,11 @@ const HomePage = () => {
             </div>
             <div className="flex items-center justify-center">
               <div className="relative h-[350px] w-[350px] md:h-[450px] md:w-[450px]">
+                <img 
+                  src="/images/cricket-trophy.png" 
+                  alt="Cricket Trophy" 
+                  className="absolute inset-0 h-full w-full object-contain z-10"
+                />
                 <Trophy className="absolute inset-0 h-full w-full text-cricket-accent opacity-20" />
               </div>
             </div>
@@ -142,7 +155,14 @@ const HomePage = () => {
       </div>
 
       <div className="bg-gray-50 py-12">
-        <div className="container px-4">
+        <div className="container px-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 opacity-10 -z-10">
+            <img 
+              src="/images/cricket-stadium.jpg" 
+              alt="Cricket Stadium" 
+              className="w-64 h-64 object-cover"
+            />
+          </div>
           <div className="mx-auto max-w-md text-center">
             <h2 className="text-2xl font-bold">Join a Tournament</h2>
             <p className="mt-2 text-gray-600">
