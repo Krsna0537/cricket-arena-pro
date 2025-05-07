@@ -41,22 +41,23 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Break the chain and use explicit typing to avoid deep type inference
-    const { data, error } = await supabase
+    // Execute the query with minimal chaining
+    const result = await supabase
       .from('innings_summary')
-      .select('*')
+      .select()
       .eq('match_id', matchId)
       .eq('inning', inning);
     
-    if (error) throw error;
+    // Handle potential error
+    if (result.error) throw result.error;
     
     // Check if we have data
-    if (!data || data.length === 0) {
+    if (!result.data || result.data.length === 0) {
       return null;
     }
     
-    // First cast to any to break the type inference chain
-    const row = data[0] as any as InningsSummaryRow;
+    // Cast the result row to the correct type, completely avoiding TypeScript's inference
+    const row = result.data[0] as unknown as InningsSummaryRow;
     
     // Map database row to domain type
     return {
