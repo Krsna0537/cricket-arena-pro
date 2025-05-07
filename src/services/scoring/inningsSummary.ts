@@ -41,31 +41,29 @@ interface InningsSummaryRow {
 
 export async function fetchInningsSummary(matchId: string, inning: number): Promise<InningsSummary | null> {
   try {
-    // Instead of using complex typing with maybeSingle, break it into simpler steps
-    const result = await supabase
+    // Avoid complex typing by using a simpler approach
+    const { data, error } = await supabase
       .from('innings_summary')
       .select('*')
       .eq('match_id', matchId)
       .eq('inning', inning);
     
     // Handle errors
-    if (result.error) {
-      if (result.error.code !== 'PGRST116') { // Ignore "no rows returned" error
-        throw result.error;
+    if (error) {
+      if (error.code !== 'PGRST116') { // Ignore "no rows returned" error
+        throw error;
       }
       return null;
     }
     
     // Check if we have data
-    const data = result.data as InningsSummaryRow[] | null;
     if (!data || data.length === 0) {
       return null;
     }
     
-    // Map the first row to our domain type
-    const row = data[0];
+    // Explicitly cast to known type and map the first row to our domain type
+    const row = data[0] as InningsSummaryRow;
     
-    // Map the database row to our domain type
     return {
       matchId: row.match_id,
       inning: row.inning,
