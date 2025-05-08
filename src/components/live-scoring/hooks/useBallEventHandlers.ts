@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Player, Match, BallEvent, WicketType, BallEventType } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -48,7 +49,8 @@ export function useBallEventHandlers(
       eventType, runs, extras, 
       striker: players.striker, 
       nonStriker: players.nonStriker, 
-      bowler: players.bowler 
+      bowler: players.bowler,
+      match: match
     });
     
     if (!players.striker || !players.nonStriker || !players.bowler) {
@@ -85,10 +87,12 @@ export function useBallEventHandlers(
       const overNum = Math.floor((nextLegal - 1) / 6) + 1;
       const ballNum = (!['wide', 'no-ball'].includes(eventType)) ? ((nextLegal - 1) % 6) + 1 : (legalCount % 6) + 1;
       
-      // Record the ball event
+      const battingTeamId = inning === 1 ? team1!.id : team2!.id;
+      
+      // Record the ball event with detailed logging
       console.log('[LiveScoring] addBallEvent payload', {
         matchId: match.id,
-        teamId: inning === 1 ? team1!.id : team2!.id,
+        teamId: battingTeamId,
         inning,
         over: overNum,
         ball: ballNum,
@@ -101,22 +105,27 @@ export function useBallEventHandlers(
         isStriker: true
       });
       
-      await addBallEvent({
-        matchId: match.id,
-        teamId: inning === 1 ? team1!.id : team2!.id,
-        inning,
-        over: overNum,
-        ball: ballNum,
-        eventType,
-        runs,
-        extras,
-        batsmanId: players.striker.id,
-        bowlerId: players.bowler.id,
-        nonStrikerId: players.nonStriker.id,
-        isStriker: true
-      });
-      
-      console.log('[LiveScoring] addBallEvent success');
+      try {
+        await addBallEvent({
+          matchId: match.id,
+          teamId: battingTeamId,
+          inning,
+          over: overNum,
+          ball: ballNum,
+          eventType,
+          runs,
+          extras,
+          batsmanId: players.striker.id,
+          bowlerId: players.bowler.id,
+          nonStrikerId: players.nonStriker.id,
+          isStriker: true
+        });
+        
+        console.log('[LiveScoring] addBallEvent success');
+      } catch (e) {
+        console.error('[LiveScoring] addBallEvent error', e);
+        throw e;
+      }
       
       // Strike rotation logic
       let swap = false;
@@ -155,7 +164,7 @@ export function useBallEventHandlers(
       console.error('[LiveScoring] addBallEvent error', String(e));
       toast({
         title: "Error",
-        description: "Failed to record ball event",
+        description: "Failed to record ball event: " + String(e),
         variant: "destructive"
       });
     } finally {

@@ -7,6 +7,8 @@ export interface BallEventRow {
   id: string;
   match_id: string;
   team_id: string;
+  batting_team_id?: string;
+  bowling_team_id?: string;
   inning: number;
   over: number;
   ball: number;

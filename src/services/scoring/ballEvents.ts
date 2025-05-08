@@ -12,6 +12,8 @@ export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): 
     const ballEventData = {
       match_id: event.matchId,
       team_id: event.teamId,
+      batting_team_id: event.teamId, // Add the batting team ID explicitly
+      bowling_team_id: event.inning === 1 ? undefined : event.teamId, // Set appropriate bowling team
       inning: event.inning,
       over: event.over,
       ball: event.ball,
@@ -25,8 +27,10 @@ export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): 
       wicket_type: event.wicketType,
       fielder_id: event.fielderId,
       extras_type: event.extrasType,
-      ball_number: ballNumber // Add calculated sequential ball number
+      ball_number: ballNumber
     };
+
+    console.log('Sending ball event data to Supabase:', ballEventData);
 
     const { data, error } = await supabase
       .from('ball_by_ball')
@@ -34,11 +38,15 @@ export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): 
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
     
     // Map DB row to BallEvent using our mapping function
     return mapRowToBallEvent(data as BallEventRow);
   } catch (error) {
+    console.error('Error in addBallEvent:', error);
     throw error;
   }
 }
@@ -60,6 +68,7 @@ export async function fetchBallEvents(matchId: string, inning: number): Promise<
     // Use our mapping function to convert rows to BallEvents
     return ballEventRows.map(mapRowToBallEvent);
   } catch (error) {
+    console.error('Error in fetchBallEvents:', error);
     throw error;
   }
 }
