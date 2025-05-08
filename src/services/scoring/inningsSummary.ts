@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DbInningsSummary, TeamInningsSummary } from './index';
 import { InningsSummary } from '@/types';
@@ -37,12 +36,10 @@ export const getInningsSummary = async (matchId: string): Promise<DbInningsSumma
       return undefined;
     }
 
-    // If we have data but it doesn't match our expected row format, handle it
-    const row = data as unknown as InningsSummaryRow;
+    // Breaking the chain by explicitly defining the type cast
+    const row = data as InningsSummaryRow;
 
     // Convert from database model to domain model
-    // This is a placeholder implementation since the actual DB schema seems different
-    // from what's expected - we need to adapt based on what's actually in the DB
     return {
       matchId: row.match_id,
       team1: {
