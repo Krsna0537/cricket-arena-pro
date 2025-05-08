@@ -9,12 +9,14 @@ interface TargetChaseProps {
     completeOvers: number;
     ballsInCurrentOver: number;
   };
+  totalOvers?: number;
 }
 
-export const TargetChase: React.FC<TargetChaseProps> = ({ inning, targetScore, summary }) => {
+export const TargetChase: React.FC<TargetChaseProps> = ({ inning, targetScore, summary, totalOvers = 20 }) => {
   if (inning === 2 && targetScore) {
     const runsNeeded = targetScore - summary.runs;
-    const ballsRemaining = 120 - (summary.completeOvers * 6 + summary.ballsInCurrentOver);
+    const maxBalls = totalOvers * 6;
+    const ballsRemaining = maxBalls - (summary.completeOvers * 6 + summary.ballsInCurrentOver);
     
     const requiredRunRate = ballsRemaining > 0 ? (runsNeeded / (ballsRemaining / 6)).toFixed(2) : "0.00";
     const currentRunRate = summary.completeOvers > 0 || summary.ballsInCurrentOver > 0 ? 

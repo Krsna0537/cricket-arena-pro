@@ -25,7 +25,8 @@ const MatchesTab = ({ tournament, onMatchClick }: MatchesTabProps) => {
         date: data.date,
         venue: data.venue,
         status: 'upcoming' as const,
-        tournamentId: tournament.id
+        tournamentId: tournament.id,
+        overs: data.overs || tournament.defaultOvers
       });
       setShowScheduleForm(false);
     } catch (error) {
@@ -51,6 +52,7 @@ const MatchesTab = ({ tournament, onMatchClick }: MatchesTabProps) => {
         <div className="mb-6">
           <ScheduleMatch 
             teams={tournament.teams} 
+            tournament={tournament}
             onSubmit={handleScheduleMatch} 
           />
         </div>

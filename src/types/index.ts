@@ -1,4 +1,3 @@
-
 export type TournamentType = 'league' | 'knockout';
 
 export type PlayerRole = 'batsman' | 'bowler' | 'all-rounder' | 'keeper';
@@ -44,6 +43,7 @@ export interface Match {
   result?: string;
   scoreTeam1?: Score;
   scoreTeam2?: Score;
+  overs?: number; // Added match-specific overs field
 }
 
 export interface Score {
@@ -64,6 +64,7 @@ export interface Tournament {
   venueCity?: string;
   accessCode?: string;
   status: 'upcoming' | 'ongoing' | 'completed';
+  defaultOvers: number; // Added default overs field
 }
 
 export interface Leaderboard {

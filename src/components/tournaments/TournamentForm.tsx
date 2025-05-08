@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,6 +16,7 @@ const tournamentSchema = z.object({
   startDate: z.string().min(1, { message: 'Start date is required' }),
   endDate: z.string().min(1, { message: 'End date is required' }),
   venueCity: z.string().min(1, { message: 'Venue city is required' }),
+  defaultOvers: z.number().min(1).max(50).default(20),
 });
 
 type TournamentFormData = z.infer<typeof tournamentSchema>;
@@ -29,6 +31,7 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
     resolver: zodResolver(tournamentSchema),
     defaultValues: {
       type: 'league',
+      defaultOvers: 20, // T20 format by default
     },
   });
 
@@ -85,6 +88,21 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit }) => {
               )}
             />
             {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="defaultOvers">Default Overs per Match</Label>
+            <Input
+              id="defaultOvers"
+              type="number"
+              min="1"
+              max="50"
+              placeholder="20"
+              {...register('defaultOvers', { valueAsNumber: true })}
+              disabled={isSubmitting}
+            />
+            {errors.defaultOvers && <p className="text-red-500 text-sm">{errors.defaultOvers.message}</p>}
+            <p className="text-sm text-gray-500">Standard formats: T20 (20 overs), ODI (50 overs)</p>
           </div>
 
           <div className="space-y-2">

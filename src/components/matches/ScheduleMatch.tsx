@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Team } from '@/types';
+import { Team, Tournament } from '@/types';
 
 const matchSchema = z.object({
   team1Id: z.string().min(1, { message: 'Team 1 is required' }),
   team2Id: z.string().min(1, { message: 'Team 2 is required' }),
   date: z.string().min(1, { message: 'Date is required' }),
   venue: z.string().min(1, { message: 'Venue is required' }),
+  overs: z.number().min(1).max(50).optional(),
 }).refine(data => data.team1Id !== data.team2Id, {
   message: "Teams must be different",
   path: ["team2Id"],
@@ -24,12 +25,18 @@ type ScheduleMatchFormData = z.infer<typeof matchSchema>;
 
 interface ScheduleMatchProps {
   teams: Team[];
+  tournament?: Tournament;
   onSubmit: (data: ScheduleMatchFormData) => void;
 }
 
-const ScheduleMatch: React.FC<ScheduleMatchProps> = ({ teams, onSubmit }) => {
+const ScheduleMatch: React.FC<ScheduleMatchProps> = ({ teams, tournament, onSubmit }) => {
+  const defaultOvers = tournament?.defaultOvers || 20;
+  
   const { register, handleSubmit, control, formState: { errors } } = useForm<ScheduleMatchFormData>({
     resolver: zodResolver(matchSchema),
+    defaultValues: {
+      overs: defaultOvers,
+    }
   });
 
   return (
@@ -83,6 +90,20 @@ const ScheduleMatch: React.FC<ScheduleMatchProps> = ({ teams, onSubmit }) => {
               )}
             />
             {errors.team2Id && <p className="text-red-500 text-sm">{errors.team2Id.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="overs">Overs</Label>
+            <Input
+              id="overs"
+              type="number"
+              min="1"
+              max="50"
+              placeholder={defaultOvers.toString()}
+              {...register('overs', { valueAsNumber: true })}
+            />
+            {errors.overs && <p className="text-red-500 text-sm">{errors.overs.message}</p>}
+            <p className="text-xs text-gray-500">Default: {defaultOvers} overs (tournament setting)</p>
           </div>
 
           <div className="space-y-2">
