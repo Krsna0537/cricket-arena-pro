@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Player, Match, BallEvent, WicketType, BallEventType } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,8 +6,8 @@ import { useApp } from '@/context/AppContext';
 export function useBallEventHandlers(
   match: Match,
   inning: number,
-  team1?: { id: string, players: Player[] },
-  team2?: { id: string, players: Player[] },
+  team1: { id: string, players: Player[] } | undefined,
+  team2: { id: string, players: Player[] } | undefined,
   events: BallEvent[],
   summary: { 
     runs: number; 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabsContent } from '@/components/ui/tabs';
 import { ScorecardHeader } from './ScorecardHeader';
@@ -11,7 +10,7 @@ import { WicketModal } from './WicketModal';
 import { ExtrasModal } from './ExtrasModal';
 import { RunsControls } from './RunsControls';
 import { InningsCompletionButton } from './InningsCompletionButton';
-import { BallEvent, Team, Player } from '@/types';
+import { BallEvent, Team, Player, WicketType } from '@/types';
 
 interface ScoringTabProps {
   inning: number;
@@ -41,8 +40,8 @@ interface ScoringTabProps {
   handleExtrasConfirm: () => void;
   setShowExtrasModal: (show: boolean) => void;
   setExtrasType: (type: string) => void;
-  wicketType: string;
-  setWicketType: (type: any) => void;
+  wicketType: WicketType | '';
+  setWicketType: (type: WicketType | '') => void;
   fielder: Player | null;
   setFielder: (player: Player | null) => void;
   striker: Player | null;

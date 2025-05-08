@@ -8,8 +8,8 @@ import { fetchBallEvents } from '@/services/scoring';
 export function usePlayerState(
   match: { id: string },
   inning: number,
-  team1?: Team,
-  team2?: Team,
+  team1: Team | undefined,
+  team2: Team | undefined,
   events: BallEvent[]
 ) {
   const { toast } = useToast();
