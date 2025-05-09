@@ -4,7 +4,8 @@ import { Player } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   createPlayer,
-  updatePlayer
+  updatePlayer,
+  getPlayerWithStats
 } from '@/services/api/playerService';
 import { useTeam } from './TeamContext';
 
@@ -21,7 +22,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const addPlayer = async (teamId: string, player: Omit<Player, 'id'>) => {
     try {
-      const newPlayer = await createPlayer(player);
+      // Set default empty stats if not provided
+      const playerWithDefaults = {
+        ...player,
+        stats: player.stats || {
+          matches: 0,
+          runs: 0,
+          wickets: 0,
+          catches: 0,
+          sixes: 0,
+          fours: 0
+        }
+      };
+
+      const newPlayer = await createPlayer(playerWithDefaults);
 
       // Update the team's players list
       const team = findTeam(teamId);
@@ -43,6 +57,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         description: "Failed to add player: " + error.message,
         variant: "destructive",
       });
+      console.error("Error adding player:", error);
       throw error;
     }
   };

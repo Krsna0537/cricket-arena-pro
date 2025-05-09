@@ -15,6 +15,12 @@ export function usePlayerSelection() {
     setNonStriker(temp);
   };
 
+  // Helper function to get player avatar or placeholder
+  const getPlayerAvatar = (player: Player | null) => {
+    if (!player) return null;
+    return player.avatar || `/placeholder.svg`;
+  };
+
   return {
     striker,
     setStriker,
@@ -24,6 +30,7 @@ export function usePlayerSelection() {
     setBowler,
     showPlayerSelect,
     setShowPlayerSelect,
-    swapBatsmen
+    swapBatsmen,
+    getPlayerAvatar
   };
 }
