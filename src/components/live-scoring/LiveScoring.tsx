@@ -12,7 +12,7 @@ import { ScoringTab, ScorecardTab, CommentaryTab } from './components/TabsConten
 import MatchNotStartedPlaceholder from './components/MatchNotStartedPlaceholder';
 import { useSummary } from './hooks/useSummary';
 import { usePlayerState } from './hooks/usePlayerState';
-import { useBallEventHandlers } from './hooks/useBallEventHandlers';
+import { useBallEventHandlers } from './hooks/ball-events';
 import { useInningsManagement } from './hooks/useInningsManagement';
 
 interface LiveScoringProps {
