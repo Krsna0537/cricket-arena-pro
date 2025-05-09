@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { 
   createTeam,
   updateTeam
-} from '@/services/tournamentService';
+} from '@/services/api/teamService';
 import { useTournament } from './TournamentContext';
 
 interface TeamContextType {

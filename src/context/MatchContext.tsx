@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { 
   createMatch,
   updateMatch
-} from '@/services/tournamentService';
+} from '@/services/api/matchService';
 import { useTournament } from './TournamentContext';
 
 interface MatchContextType {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext } from 'react';
 import { Tournament, Team, Match } from '../types';
 import { useToast } from '../components/ui/use-toast';
@@ -7,7 +6,7 @@ import {
   createTournament, 
   updateTournament,
   generateShareableLink
-} from '../services/tournamentService';
+} from '../services/api/tournamentService';
 
 interface TournamentContextType {
   tournaments: Tournament[];
