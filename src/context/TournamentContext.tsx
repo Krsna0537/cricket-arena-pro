@@ -1,13 +1,12 @@
-
 import React, { createContext, useState, useContext } from 'react';
-import { Tournament, Team, Match } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { Tournament, Team, Match } from '../types';
+import { useToast } from '../components/ui/use-toast';
 import { 
   fetchTournaments,
   createTournament, 
   updateTournament,
   generateShareableLink
-} from '@/services/tournamentService';
+} from '../services/tournamentService';
 
 interface TournamentContextType {
   tournaments: Tournament[];
@@ -16,7 +15,7 @@ interface TournamentContextType {
   addTournament: (tournament: Omit<Tournament, 'id' | 'teams' | 'matches'>) => Promise<void>;
   updateTournament: (tournament: Tournament) => Promise<void>;
   findTournament: (tournamentId: string) => Tournament | undefined;
-  generateShareableLink: (tournament: Tournament) => string;
+  generateShareableLink: (tournamentId: string) => Promise<string>;
 }
 
 const TournamentContext = createContext<TournamentContextType | undefined>(undefined);
@@ -50,9 +49,8 @@ export const TournamentProvider: React.FC<{
 
   const handleUpdateTournament = async (tournament: Tournament) => {
     try {
-      await updateTournament(tournament);
-      
-      setTournaments(prev => prev.map(t => t.id === tournament.id ? tournament : t));
+      const updatedTournament = await updateTournament(tournament.id, tournament);
+      setTournaments(prev => prev.map(t => t.id === tournament.id ? updatedTournament : t));
       
       toast({
         title: "Success",

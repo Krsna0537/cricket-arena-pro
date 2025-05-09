@@ -1,4 +1,3 @@
-
 import { Tournament, Team, Player, Match, MatchStatus } from '@/types';
 
 // Helper function to generate random IDs
@@ -175,6 +174,7 @@ export const generateMockTournaments = (): Tournament[] => {
       venueCity: "Mumbai",
       accessCode: "CPL2025",
       status: "ongoing" as const,
+      defaultOvers: 20
     },
     {
       id: generateId(),
@@ -188,6 +188,7 @@ export const generateMockTournaments = (): Tournament[] => {
       venueCity: "Delhi",
       accessCode: "T20KC",
       status: "upcoming" as const,
+      defaultOvers: 20
     }
   ];
   
@@ -198,7 +199,7 @@ export const generateMockTournaments = (): Tournament[] => {
     return {
       ...tournament,
       teams,
-      matches,
+      matches
     };
   });
 };
