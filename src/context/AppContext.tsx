@@ -43,6 +43,7 @@ const DataFetcher: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 // The main App Provider that wraps all other providers
+// Important: Fix the nesting order to ensure each provider is available to the ones that depend on it
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <TournamentProvider initialTournaments={[]}>
