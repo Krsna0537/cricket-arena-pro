@@ -21,7 +21,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const addPlayer = async (teamId: string, player: Omit<Player, 'id'>) => {
     try {
-      const newPlayer = await createPlayer(teamId, player);
+      const newPlayer = await createPlayer(player);
 
       // Update the team's players list
       const team = findTeam(teamId);
@@ -49,7 +49,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const handleUpdatePlayer = async (player: Player) => {
     try {
-      await updatePlayer(player);
+      await updatePlayer(player.id, player);
 
       const team = findTeam(player.teamId);
       if (team) {

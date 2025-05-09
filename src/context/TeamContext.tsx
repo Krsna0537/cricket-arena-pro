@@ -22,7 +22,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTeam = async (tournamentId: string, team: Omit<Team, 'id' | 'players'>) => {
     try {
-      const newTeam = await createTeam(tournamentId, team);
+      const newTeam = await createTeam(team);
       
       const tournament = findTournament(tournamentId);
       if (tournament) {
@@ -49,7 +49,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleUpdateTeam = async (team: Team) => {
     try {
-      await updateTeam(team);
+      await updateTeam(team.id, team);
 
       const tournament = findTournament(team.tournamentId);
       if (tournament) {

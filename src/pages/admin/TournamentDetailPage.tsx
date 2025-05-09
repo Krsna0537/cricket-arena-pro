@@ -27,7 +27,10 @@ const TournamentDetailPage = () => {
       const found = findTournament(tournamentId);
       if (found) {
         setTournament(found);
-        setShareLink(generateShareableLink(found));
+        // Generate share link and set it once available
+        generateShareableLink(tournamentId).then(link => {
+          setShareLink(link);
+        });
       }
     }
   }, [tournamentId, findTournament, generateShareableLink]);

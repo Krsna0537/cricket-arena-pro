@@ -31,12 +31,8 @@ export const TournamentProvider: React.FC<{
 
   const addTournament = async (tournament: Omit<Tournament, 'id' | 'teams' | 'matches'>) => {
     try {
-      // Ensure we create with empty arrays for teams and matches
-      const newTournament = await createTournament({
-        ...tournament,
-        teams: [],
-        matches: []
-      });
+      // Create tournament without specifying teams/matches as they are added separately
+      const newTournament = await createTournament(tournament);
       
       setTournaments(prev => [...prev, newTournament]);
       

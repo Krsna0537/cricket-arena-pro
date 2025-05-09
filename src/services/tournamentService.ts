@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabase';
 import { Tournament, TournamentType, MatchStatus, Match, Team, Player } from '../types';
 
@@ -82,7 +83,13 @@ export async function createTournament(tournament: Omit<Tournament, 'id' | 'team
     .single();
 
   if (error) throw error;
-  return data as Tournament;
+  
+  // Return with empty teams and matches arrays
+  return {
+    ...data,
+    teams: [],
+    matches: []
+  } as Tournament;
 }
 
 export async function updateTournament(id: string, updates: Partial<Tournament>): Promise<Tournament> {
@@ -103,7 +110,12 @@ export async function updateTournament(id: string, updates: Partial<Tournament>)
     .single();
 
   if (error) throw error;
-  return data as Tournament;
+  // Preserve teams and matches data in the returned object
+  return {
+    ...data,
+    teams: updates.teams || [],
+    matches: updates.matches || []
+  } as Tournament;
 }
 
 export async function createTeam(team: Omit<Team, 'id' | 'players'>): Promise<Team> {
@@ -133,7 +145,11 @@ export async function updateTeam(id: string, updates: Partial<Team>): Promise<Te
     .single();
 
   if (error) throw error;
-  return data as Team;
+  // Preserve players data in the returned object
+  return {
+    ...data,
+    players: updates.players || []
+  } as Team;
 }
 
 export async function createPlayer(player: Omit<Player, 'id'>): Promise<Player> {
@@ -219,3 +235,4 @@ export async function generateShareableLink(tournamentId: string): Promise<strin
   if (error) throw error;
   return `${window.location.origin}/join/${data.access_code}`;
 }
+
