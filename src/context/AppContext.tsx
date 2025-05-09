@@ -18,11 +18,19 @@ const DataFetcher: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const loadTournaments = async () => {
       try {
         const data = await fetchTournaments();
-        setCurrentTournament(data.length > 0 ? data[0] : null);
+        
+        // Handle both null response and empty array
+        if (data && data.length > 0) {
+          setCurrentTournament(data[0]);
+        } else {
+          console.log("No tournaments found or data is null");
+          setCurrentTournament(null);
+        }
       } catch (error: any) {
+        console.error("Error fetching tournaments:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch tournaments: " + error.message,
+          description: "Failed to fetch tournaments: " + (error?.message || "Unknown error"),
           variant: "destructive",
         });
       }
@@ -37,7 +45,7 @@ const DataFetcher: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // The main App Provider that wraps all other providers
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <TournamentProvider>
+    <TournamentProvider initialTournaments={[]}>
       <TeamProvider>
         <PlayerProvider>
           <MatchProvider>

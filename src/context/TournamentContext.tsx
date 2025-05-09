@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext } from 'react';
 import { Tournament, Team, Match } from '../types';
 import { useToast } from '../components/ui/use-toast';
@@ -30,7 +31,13 @@ export const TournamentProvider: React.FC<{
 
   const addTournament = async (tournament: Omit<Tournament, 'id' | 'teams' | 'matches'>) => {
     try {
-      const newTournament = await createTournament(tournament);
+      // Ensure we create with empty arrays for teams and matches
+      const newTournament = await createTournament({
+        ...tournament,
+        teams: [],
+        matches: []
+      });
+      
       setTournaments(prev => [...prev, newTournament]);
       
       toast({

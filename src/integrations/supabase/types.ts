@@ -636,6 +636,7 @@ export type Database = {
           access_code: string | null
           created_at: string
           creator_id: string
+          default_overs: number | null
           end_date: string
           id: string
           name: string
@@ -649,6 +650,7 @@ export type Database = {
           access_code?: string | null
           created_at?: string
           creator_id: string
+          default_overs?: number | null
           end_date: string
           id?: string
           name: string
@@ -662,6 +664,7 @@ export type Database = {
           access_code?: string | null
           created_at?: string
           creator_id?: string
+          default_overs?: number | null
           end_date?: string
           id?: string
           name?: string

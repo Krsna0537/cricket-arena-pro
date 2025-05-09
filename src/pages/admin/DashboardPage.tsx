@@ -9,7 +9,7 @@ import TournamentForm from '@/components/tournaments/TournamentForm';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Calendar, Plus, Trophy, Users } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 const DashboardPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -35,22 +35,22 @@ const DashboardPage = () => {
     }
   };
   
-  // Calculate aggregate stats
-  const totalTeams = tournaments.reduce((acc, t) => acc + t.teams.length, 0);
-  const totalMatches = tournaments.reduce((acc, t) => acc + t.matches.length, 0);
-  const liveMatches = tournaments.reduce(
-    (acc, t) => acc + t.matches.filter(m => m.status === 'live').length, 
+  // Calculate aggregate stats safely with null checks
+  const totalTeams = tournaments ? tournaments.reduce((acc, t) => acc + (t.teams?.length || 0), 0) : 0;
+  const totalMatches = tournaments ? tournaments.reduce((acc, t) => acc + (t.matches?.length || 0), 0) : 0;
+  const liveMatches = tournaments ? tournaments.reduce(
+    (acc, t) => acc + (t.matches?.filter(m => m.status === 'live')?.length || 0), 
     0
-  );
-  const completedMatches = tournaments.reduce(
-    (acc, t) => acc + t.matches.filter(m => m.status === 'completed').length, 
+  ) : 0;
+  const completedMatches = tournaments ? tournaments.reduce(
+    (acc, t) => acc + (t.matches?.filter(m => m.status === 'completed')?.length || 0), 
     0
-  );
-  const upcomingMatches = tournaments.reduce(
-    (acc, t) => acc + t.matches.filter(m => m.status === 'upcoming').length, 
+  ) : 0;
+  const upcomingMatches = tournaments ? tournaments.reduce(
+    (acc, t) => acc + (t.matches?.filter(m => m.status === 'upcoming')?.length || 0), 
     0
-  );
-  const liveTournaments = tournaments.filter(t => t.status === 'ongoing').length;
+  ) : 0;
+  const liveTournaments = tournaments ? tournaments.filter(t => t.status === 'ongoing').length : 0;
 
   if (isLoading) {
     return (
@@ -105,7 +105,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {tournaments.length > 0 ? (
+      {tournaments && tournaments.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tournaments.map((tournament) => (
             <TournamentCard
@@ -133,7 +133,7 @@ const DashboardPage = () => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-              <p className="text-3xl font-bold">{tournaments.length}</p>
+              <p className="text-3xl font-bold">{tournaments ? tournaments.length : 0}</p>
               <p className="text-sm text-gray-500">Tournaments</p>
             </div>
             <div className="text-center p-4 bg-white rounded-lg shadow-sm">

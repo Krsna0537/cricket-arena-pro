@@ -20,6 +20,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, isAdmin = f
     }
   };
 
+  // Ensure tournament.teams has a safe default
+  const teamsCount = tournament.teams?.length || 0;
+
   return (
     <Card className="cricket-card overflow-hidden">
       <div className="h-2 cricket-gradient w-full" />
@@ -42,7 +45,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, isAdmin = f
         </div>
         <div className="flex items-center gap-2 text-gray-600">
           <Users className="h-4 w-4" />
-          <span>{tournament.teams.length} Teams</span>
+          <span>{teamsCount} Teams</span>
         </div>
       </CardContent>
       <CardFooter className="pt-0">

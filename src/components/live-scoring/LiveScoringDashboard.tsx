@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
@@ -17,10 +18,10 @@ const LiveScoringDashboard: React.FC = () => {
   const [bowlerId, setBowlerId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Find selected match and team
-  const allMatches = tournaments.flatMap(t => t.matches);
+  // Safely find selected match and team with null checks
+  const allMatches = tournaments?.flatMap(t => t.matches || []) || [];
   const selectedMatch = allMatches.find(m => m.id === selectedMatchId);
-  const allTeams = tournaments.flatMap(t => t.teams);
+  const allTeams = tournaments?.flatMap(t => t.teams || []) || [];
   const selectedTeam = allTeams.find(t => t.id === selectedTeamId);
   const players = selectedTeam?.players || [];
 
@@ -207,4 +208,4 @@ const LiveScoringDashboard: React.FC = () => {
   );
 };
 
-export default LiveScoringDashboard; 
+export default LiveScoringDashboard;

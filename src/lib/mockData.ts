@@ -1,3 +1,4 @@
+
 import { Tournament, Team, Player, Match, MatchStatus } from '@/types';
 
 // Helper function to generate random IDs
@@ -169,8 +170,8 @@ export const generateMockTournaments = (): Tournament[] => {
       startDate: "2025-05-15",
       endDate: "2025-06-30",
       creatorId: "user1",
-      teams: [],
-      matches: [],
+      teams: [] as Team[],
+      matches: [] as Match[],
       venueCity: "Mumbai",
       accessCode: "CPL2025",
       status: "ongoing" as const,
@@ -183,8 +184,8 @@ export const generateMockTournaments = (): Tournament[] => {
       startDate: "2025-07-10",
       endDate: "2025-07-25",
       creatorId: "user1",
-      teams: [],
-      matches: [],
+      teams: [] as Team[],
+      matches: [] as Match[],
       venueCity: "Delhi",
       accessCode: "T20KC",
       status: "upcoming" as const,
