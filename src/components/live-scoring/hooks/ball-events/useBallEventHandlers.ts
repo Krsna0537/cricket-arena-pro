@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Player, Match, BallEvent, BallEventType } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,7 +27,8 @@ export function useBallEventHandlers(
     setBowler: (player: Player | null) => void;
     setShowPlayerSelect: (show: boolean) => void;
     updateAvailableBatsmenAfterWicket: (id: string) => void;
-  }
+  },
+  handleCompleteInnings: () => void
 ) {
   const { toast } = useToast();
   const { addBallEvent } = useApp();
@@ -122,11 +122,17 @@ export function useBallEventHandlers(
       // Handle regular runs
       await runHandlers.handleRunsEvent(eventType, runs, extras);
       
+      // Auto-end innings if over limit reached
+      const legalBalls = events.filter(e => !['wide', 'no-ball'].includes(e.eventType)).length + 1; // +1 for this ball
+      if (legalBalls >= match.overs * 6) {
+        handleCompleteInnings();
+      }
+      
     } catch (e) {
-      console.error('[LiveScoring] addBallEvent error', String(e));
+      console.error('[LiveScoring] addBallEvent error', e);
       toast({
         title: "Error",
-        description: "Failed to record ball event: " + String(e),
+        description: "Failed to record ball event: " + (e?.message || JSON.stringify(e)),
         variant: "destructive"
       });
     } finally {

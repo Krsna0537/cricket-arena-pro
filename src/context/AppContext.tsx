@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { fetchTournaments } from '@/services/tournamentService';
@@ -7,23 +6,29 @@ import { TeamProvider, useTeam } from './TeamContext';
 import { PlayerProvider, usePlayer } from './PlayerContext';
 import { MatchProvider, useMatch } from './MatchContext';
 import { ScoringProvider, useScoring, useLiveBallEvents } from './ScoringContext';
+import { useAuth } from '@/context/AuthContext';
 
 // Create a data initializer component
 const DataFetcher: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
-  const { tournaments, setCurrentTournament } = useTournament();
+  const { tournaments, setCurrentTournament, setTournaments } = useTournament();
+  const { user } = useAuth();
 
-  // Fetch tournaments on mount
+  // Fetch tournaments on mount and when user changes
   useEffect(() => {
     const loadTournaments = async () => {
       try {
-        const data = await fetchTournaments();
-        
-        // Handle both null response and empty array
-        if (data && data.length > 0) {
-          setCurrentTournament(data[0]);
+        if (user?.id) {
+          const data = await fetchTournaments(user.id);
+          if (data && data.length > 0) {
+            setTournaments(data);
+            setCurrentTournament(data[0]);
+          } else {
+            setTournaments([]);
+            setCurrentTournament(null);
+          }
         } else {
-          console.log("No tournaments found or data is null");
+          setTournaments([]);
           setCurrentTournament(null);
         }
       } catch (error: any) {
@@ -35,9 +40,8 @@ const DataFetcher: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         });
       }
     };
-    
     loadTournaments();
-  }, [toast, setCurrentTournament]);
+  }, [user, toast, setCurrentTournament, setTournaments]);
 
   return <>{children}</>;
 };

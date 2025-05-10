@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { BallEvent } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { BallEventRow, mapRowToBallEvent } from '@/services/scoring/utils';
 
 // Real-time ball event subscription hook

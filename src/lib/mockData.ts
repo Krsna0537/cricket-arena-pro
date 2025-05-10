@@ -1,4 +1,3 @@
-
 import { Tournament, Team, Player, Match, MatchStatus } from '@/types';
 
 // Helper function to generate random IDs
@@ -104,8 +103,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       venue: venues[0],
       status: statuses[2],
       result: `${teams[0].name} won by 5 wickets`,
-      scoreTeam1: { runs: 180, wickets: 4, overs: 20 },
-      scoreTeam2: { runs: 176, wickets: 8, overs: 20 },
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
     {
       id: generateId(),
@@ -116,8 +115,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       venue: venues[1],
       status: statuses[2],
       result: `${teams[3].name} won by 8 runs`,
-      scoreTeam1: { runs: 165, wickets: 9, overs: 20 },
-      scoreTeam2: { runs: 173, wickets: 6, overs: 20 },
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
     {
       id: generateId(),
@@ -127,8 +126,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       date: generateMatchDates('2025-05-15', 2),
       venue: venues[2],
       status: statuses[1],
-      scoreTeam1: { runs: 112, wickets: 3, overs: 14.2 },
-      scoreTeam2: { runs: 0, wickets: 0, overs: 0 },
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
     {
       id: generateId(),
@@ -138,6 +137,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       date: generateMatchDates('2025-05-15', 3),
       venue: venues[3],
       status: statuses[0],
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
     {
       id: generateId(),
@@ -147,6 +148,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       date: generateMatchDates('2025-05-15', 4),
       venue: venues[0],
       status: statuses[0],
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
     {
       id: generateId(),
@@ -156,6 +159,8 @@ export const generateMockMatches = (tournamentId: string, teams: Team[]): Match[
       date: generateMatchDates('2025-05-15', 5),
       venue: venues[1],
       status: statuses[0],
+      // NOTE: Removed scoreTeam1 and scoreTeam2 from mock matches. Mock scores via innings_summary or match_scores if needed.
+      overs: 20,
     },
   ];
 };

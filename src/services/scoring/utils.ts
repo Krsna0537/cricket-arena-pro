@@ -1,6 +1,5 @@
-
 import { BallEvent, BallEventType, WicketType } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Define a separate interface for ball event database rows to avoid recursive typing
 export interface BallEventRow {

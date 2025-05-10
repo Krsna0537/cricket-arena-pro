@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
@@ -23,6 +22,7 @@ interface ScorecardHeaderProps {
   isLive: boolean;
   loadingSummary: boolean;
   targetScore: number | null;
+  totalOvers: number;
 }
 
 export const ScorecardHeader: React.FC<ScorecardHeaderProps> = ({
@@ -33,7 +33,8 @@ export const ScorecardHeader: React.FC<ScorecardHeaderProps> = ({
   runRate, 
   isLive, 
   loadingSummary,
-  targetScore
+  targetScore,
+  totalOvers
 }) => {
   return (
     <div className="mb-2">
@@ -75,6 +76,7 @@ export const ScorecardHeader: React.FC<ScorecardHeaderProps> = ({
               completeOvers: summary.completeOvers,
               ballsInCurrentOver: summary.ballsInCurrentOver
             }} 
+            totalOvers={totalOvers}
           />
         </>
       )}

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Player, Match, BallEvent } from '@/types';
 
@@ -76,22 +75,7 @@ export function useExtrasHandlers({
       setExtrasType('');
       setExtrasRuns(1);
       
-      // Auto-update match score
-      const updatedMatch = {...match};
-      if (inning === 1) {
-        updatedMatch.scoreTeam1 = {
-          runs: summary.runs + extrasRuns,
-          wickets: summary.wickets,
-          overs: summary.overs + (extrasType !== 'wide' && extrasType !== 'no-ball' ? 0.1 : 0)
-        };
-      } else {
-        updatedMatch.scoreTeam2 = {
-          runs: summary.runs + extrasRuns,
-          wickets: summary.wickets,
-          overs: summary.overs + (extrasType !== 'wide' && extrasType !== 'no-ball' ? 0.1 : 0)
-        };
-      }
-      onUpdateScore(updatedMatch);
+      // NOTE: Removed logic updating match.scoreTeam1 and match.scoreTeam2. Update the relevant row in innings_summary or match_scores instead.
       
       toast({
         title: "Extras Recorded",

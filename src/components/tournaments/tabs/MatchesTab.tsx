@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tournament, Team, Match } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -22,11 +21,13 @@ const MatchesTab = ({ tournament, onMatchClick }: MatchesTabProps) => {
       await addMatch(tournament.id, {
         team1Id: data.team1Id,
         team2Id: data.team2Id,
-        date: data.date,
-        venue: data.venue,
+        date: data.date || tournament.startDate,
+        venue: data.venue || tournament.venueCity,
         status: 'upcoming' as const,
         tournamentId: tournament.id,
-        overs: data.overs || tournament.defaultOvers
+        overs: data.overs || tournament.defaultOvers,
+        tossWinnerId: data.tossWinnerId,
+        tossDecision: data.tossDecision
       });
       setShowScheduleForm(false);
     } catch (error) {

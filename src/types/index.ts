@@ -41,9 +41,10 @@ export interface Match {
   venue: string;
   status: MatchStatus;
   result?: string;
-  scoreTeam1?: Score;
-  scoreTeam2?: Score;
-  overs?: number; // Added match-specific overs field
+  // Removed scoreTeam1 and scoreTeam2. Fetch scores from innings_summary or match_scores instead.
+  overs: number;
+  tossWinnerId?: string;
+  tossDecision?: 'bat' | 'bowl';
 }
 
 export interface Score {
@@ -156,6 +157,8 @@ export interface MatchFromDB {
   tournament_id: string;
   updated_at: string;
   venue: string;
-  scoreTeam1?: any;
-  scoreTeam2?: any;
+  overs: number;
+  toss_winner_id: string | null;
+  toss_decision: 'bat' | 'bowl' | null;
+  // Removed scoreTeam1 and scoreTeam2. Fetch scores from innings_summary or match_scores instead.
 }

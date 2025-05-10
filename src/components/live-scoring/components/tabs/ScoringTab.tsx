@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabsContent } from '@/components/ui/tabs';
 import { ScorecardHeader } from '../ScorecardHeader';
@@ -56,6 +55,7 @@ interface ScoringTabProps {
   isLoading: boolean;
   handleBall: (eventType: any, runs?: number, extras?: number) => void;
   handleCompleteInnings: () => void;
+  totalOvers: number;
 }
 
 export const ScoringTab: React.FC<ScoringTabProps> = ({
@@ -95,6 +95,7 @@ export const ScoringTab: React.FC<ScoringTabProps> = ({
   isLoading,
   handleBall,
   handleCompleteInnings,
+  totalOvers
 }) => {
   return (
     <TabsContent value="scoring">
@@ -111,6 +112,7 @@ export const ScoringTab: React.FC<ScoringTabProps> = ({
         isLive={isLive}
         loadingSummary={loadingSummary}
         targetScore={targetScore}
+        totalOvers={totalOvers}
       />
       
       {showWicketModal && (

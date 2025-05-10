@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,22 +69,16 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, team1, team2, onClick }) =
           </div>
         </div>
 
-        {(match.status === 'live' || match.status === 'completed') && match.scoreTeam1 && (
+        {(match.status === 'live' || match.status === 'completed') && (
           <div className="mt-3 grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-md">
             <div className="text-sm">
               <p className="font-medium truncate">{team1?.name || 'Team 1'}</p>
-              <p className="text-cricket-navy font-bold">
-                {match.scoreTeam1.runs}/{match.scoreTeam1.wickets} ({match.scoreTeam1.overs.toFixed(1)} ov)
-              </p>
+              <p className="text-cricket-navy font-bold">Score loading...</p>
             </div>
-            {match.scoreTeam2 && match.scoreTeam2.runs > 0 && (
-              <div className="text-sm">
-                <p className="font-medium truncate">{team2?.name || 'Team 2'}</p>
-                <p className="text-cricket-navy font-bold">
-                  {match.scoreTeam2.runs}/{match.scoreTeam2.wickets} ({match.scoreTeam2.overs.toFixed(1)} ov)
-                </p>
-              </div>
-            )}
+            <div className="text-sm">
+              <p className="font-medium truncate">{team2?.name || 'Team 2'}</p>
+              <p className="text-cricket-navy font-bold">Score loading...</p>
+            </div>
           </div>
         )}
 

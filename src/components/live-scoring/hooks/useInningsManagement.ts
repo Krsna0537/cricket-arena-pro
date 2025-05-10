@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { Match } from '@/types';
 
 export function useInningsManagement(
@@ -59,6 +58,12 @@ export function useInningsManagement(
         extras: summary.extras
       });
       
+      // Fetch the saved summary to get the correct runs
+      const firstInningSummary = await fetchInningsSummary(match.id, 1);
+      if (firstInningSummary) {
+        setTargetScore(firstInningSummary.runs + 1);
+      }
+      
       // Update target score in database
       await supabase
         .from('target_scores')
@@ -71,7 +76,6 @@ export function useInningsManagement(
       // Switch to second innings
       setInning(2);
       setInning1Complete(true);
-      setTargetScore(summary.runs + 1);
       
       toast({
         title: "Innings Complete",

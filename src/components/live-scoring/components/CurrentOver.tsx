@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BallEvent } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +41,7 @@ export const CurrentOver: React.FC<CurrentOverProps> = ({ events }) => {
             
             return (
               <div key={i} className="text-center">
-                <div className="text-xs text-gray-500 mb-1">{e.ball}.{i+1}</div>
+                <div className="text-xs text-gray-500 mb-1">{e.over}.{e.ball}</div>
                 <Badge 
                   className={`text-base py-3 px-4 font-mono font-bold shadow-sm border ${ballClass}`}
                   variant="outline"

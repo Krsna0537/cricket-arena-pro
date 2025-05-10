@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -16,6 +15,8 @@ const matchSchema = z.object({
   date: z.string().min(1, { message: 'Date is required' }),
   venue: z.string().min(1, { message: 'Venue is required' }),
   overs: z.number().min(1).max(50).optional(),
+  tossWinnerId: z.string().optional(),
+  tossDecision: z.enum(['bat', 'bowl']).optional(),
 }).refine(data => data.team1Id !== data.team2Id, {
   message: "Teams must be different",
   path: ["team2Id"],
@@ -104,6 +105,49 @@ const ScheduleMatch: React.FC<ScheduleMatchProps> = ({ teams, tournament, onSubm
             />
             {errors.overs && <p className="text-red-500 text-sm">{errors.overs.message}</p>}
             <p className="text-xs text-gray-500">Default: {defaultOvers} overs (tournament setting)</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tossWinnerId">Toss Winner</Label>
+            <Controller
+              name="tossWinnerId"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select toss winner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.tossWinnerId && <p className="text-red-500 text-sm">{errors.tossWinnerId.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tossDecision">Toss Decision</Label>
+            <Controller
+              name="tossDecision"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select decision" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bat">Bat</SelectItem>
+                    <SelectItem value="bowl">Bowl</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.tossDecision && <p className="text-red-500 text-sm">{errors.tossDecision.message}</p>}
           </div>
 
           <div className="space-y-2">

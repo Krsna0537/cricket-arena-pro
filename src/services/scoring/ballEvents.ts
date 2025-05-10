@@ -1,6 +1,5 @@
-
 import { BallEvent } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { BallEventRow, mapRowToBallEvent } from './utils';
 
 export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): Promise<BallEvent> {
@@ -30,16 +29,21 @@ export async function addBallEvent(event: Omit<BallEvent, 'id' | 'createdAt'>): 
       ball_number: ballNumber
     };
 
-    console.log('Sending ball event data to Supabase:', ballEventData);
+    // Remove undefined fields from the payload
+    const cleanData = Object.fromEntries(
+      Object.entries(ballEventData).filter(([_, v]) => v !== undefined)
+    );
+
+    console.log('Sending ball event data to Supabase:', cleanData);
 
     const { data, error } = await supabase
       .from('ball_by_ball')
-      .insert(ballEventData)
+      .insert([cleanData])
       .select()
       .single();
     
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('Supabase error:', error.message, error.details, error.hint);
       throw error;
     }
     

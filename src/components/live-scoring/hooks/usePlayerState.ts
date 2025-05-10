@@ -1,8 +1,8 @@
-
 import { Player, Team } from '@/types';
 import { BallEvent } from '@/types';
 import { usePlayerSelection } from './player-state/usePlayerSelection';
 import { useAvailablePlayersState } from './player-state/useAvailablePlayersState';
+import { useEffect } from 'react';
 
 export function usePlayerState(
   match: { id: string },
@@ -26,6 +26,14 @@ export function usePlayerState(
     playerSelection.setBowler,
     playerSelection.setShowPlayerSelect
   );
+
+  // Reset player state on innings change
+  useEffect(() => {
+    playerSelection.setStriker(null);
+    playerSelection.setNonStriker(null);
+    playerSelection.setBowler(null);
+    playerSelection.setShowPlayerSelect(true);
+  }, [inning]);
 
   // Return combined state and functions
   return {

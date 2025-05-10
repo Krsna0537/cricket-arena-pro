@@ -1,4 +1,3 @@
-
 import { Player, Match, BallEvent, BallEventType } from '@/types';
 
 // Define the props interface for clarity and type safety
@@ -109,17 +108,9 @@ export function useRunHandlers({
     // Auto-update match score
     const updatedMatch = {...match};
     if (inning === 1) {
-      updatedMatch.scoreTeam1 = {
-        runs: summary.runs + runs + extras,
-        wickets: summary.wickets,
-        overs: summary.overs + (!['wide', 'no-ball'].includes(eventType) ? 0.1 : 0)
-      };
+      // NOTE: Removed logic updating match.scoreTeam1. Update the relevant row in innings_summary or match_scores instead.
     } else {
-      updatedMatch.scoreTeam2 = {
-        runs: summary.runs + runs + extras,
-        wickets: summary.wickets,
-        overs: summary.overs + (!['wide', 'no-ball'].includes(eventType) ? 0.1 : 0)
-      };
+      // NOTE: Removed logic updating match.scoreTeam2. Update the relevant row in innings_summary or match_scores instead.
     }
     onUpdateScore(updatedMatch);
   };

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from 'react';
 import { Team, Player } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,6 +6,8 @@ import {
   updateTeam
 } from '@/services/api/teamService';
 import { useTournament } from './TournamentContext';
+import { fetchTournaments } from '@/services/api/tournamentService';
+import { useAuth } from '@/context/AuthContext';
 
 interface TeamContextType {
   addTeam: (tournamentId: string, team: Omit<Team, 'id' | 'players'>) => Promise<void>;
@@ -18,12 +19,12 @@ const TeamContext = createContext<TeamContextType | undefined>(undefined);
 
 export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
-  const { tournaments, updateTournament: handleUpdateTournament, findTournament } = useTournament();
+  const { tournaments, updateTournament: handleUpdateTournament, findTournament, setTournaments } = useTournament();
+  const { user } = useAuth();
 
   const addTeam = async (tournamentId: string, team: Omit<Team, 'id' | 'players'>) => {
     try {
       const newTeam = await createTeam(team);
-      
       const tournament = findTournament(tournamentId);
       if (tournament) {
         const updatedTournament = {
@@ -31,8 +32,12 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           teams: [...tournament.teams, newTeam]
         };
         await handleUpdateTournament(updatedTournament);
+        // Re-fetch tournaments to update context with latest data
+        if (user?.id) {
+          const updatedTournaments = await fetchTournaments(user.id);
+          setTournaments(updatedTournaments);
+        }
       }
-
       toast({
         title: "Success",
         description: "Team added successfully",

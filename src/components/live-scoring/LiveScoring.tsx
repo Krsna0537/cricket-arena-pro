@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -145,6 +144,7 @@ const LiveScoring: React.FC<LiveScoringProps> = ({ match, team1, team2, onUpdate
               isLoading={eventHandlers.isLoading}
               handleBall={eventHandlers.handleBall}
               handleCompleteInnings={handleCompleteInnings}
+              totalOvers={match.overs}
             />
             
             <ScorecardTab

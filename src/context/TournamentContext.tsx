@@ -12,6 +12,7 @@ interface TournamentContextType {
   tournaments: Tournament[];
   currentTournament: Tournament | null;
   setCurrentTournament: (tournament: Tournament | null) => void;
+  setTournaments: (tournaments: Tournament[]) => void;
   addTournament: (tournament: Omit<Tournament, 'id' | 'teams' | 'matches'>) => Promise<void>;
   updateTournament: (tournament: Tournament) => Promise<void>;
   findTournament: (tournamentId: string) => Tournament | undefined;
@@ -78,6 +79,7 @@ export const TournamentProvider: React.FC<{
         tournaments,
         currentTournament,
         setCurrentTournament,
+        setTournaments,
         addTournament,
         updateTournament: handleUpdateTournament,
         findTournament,

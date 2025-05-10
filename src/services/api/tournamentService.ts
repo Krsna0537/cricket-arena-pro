@@ -1,8 +1,7 @@
-
 import { supabase } from '../../lib/supabase';
 import { Tournament } from '../../types';
 
-export async function fetchTournaments(): Promise<Tournament[]> {
+export async function fetchTournaments(userId: string): Promise<Tournament[]> {
   const { data, error } = await supabase
     .from('tournaments')
     .select(`
@@ -10,6 +9,7 @@ export async function fetchTournaments(): Promise<Tournament[]> {
       teams:teams(*, players:players(*)),
       matches:matches(*)
     `)
+    .eq('creator_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

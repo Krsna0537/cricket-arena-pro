@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { WicketType, Player, Match, BallEvent } from '@/types';
 
@@ -97,21 +96,7 @@ export function useWicketHandlers({
       players.setStriker(null);
       
       // Auto-update match score
-      const updatedMatch = {...match};
-      if (inning === 1) {
-        updatedMatch.scoreTeam1 = {
-          runs: summary.runs,
-          wickets: summary.wickets + 1,
-          overs: summary.overs + 0.1
-        };
-      } else {
-        updatedMatch.scoreTeam2 = {
-          runs: summary.runs,
-          wickets: summary.wickets + 1,
-          overs: summary.overs + 0.1
-        };
-      }
-      onUpdateScore(updatedMatch);
+      // NOTE: Removed logic updating match.scoreTeam1 and match.scoreTeam2. Update the relevant row in innings_summary or match_scores instead.
       
       toast({
         title: "Wicket Recorded",

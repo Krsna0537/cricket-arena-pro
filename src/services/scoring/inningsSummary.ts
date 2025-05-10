@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { DbInningsSummary, TeamInningsSummary } from './index';
 import { InningsSummary } from '@/types';
 

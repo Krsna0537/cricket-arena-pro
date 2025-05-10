@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,41 +59,12 @@ const PublicTournamentView = () => {
     tournament.matches
       .filter(match => match.status === 'completed')
       .forEach(match => {
-        if (!match.scoreTeam1 || !match.scoreTeam2) return;
-        
-        const team1Data = leaderboard[match.team1Id];
-        const team2Data = leaderboard[match.team2Id];
-        
-        if (team1Data && team2Data) {
-          // Update matches played
-          team1Data.matchesPlayed += 1;
-          team2Data.matchesPlayed += 1;
-          
-          // Determine winner and update points
-          if (match.scoreTeam1.runs > match.scoreTeam2.runs) {
-            team1Data.won += 1;
-            team1Data.points += 2;
-            team2Data.lost += 1;
-          } else if (match.scoreTeam2.runs > match.scoreTeam1.runs) {
-            team2Data.won += 1;
-            team2Data.points += 2;
-            team1Data.lost += 1;
-          } else {
-            // Match tied
-            team1Data.points += 1;
-            team2Data.points += 1;
-          }
-          
-          // Calculate net run rate (simplified)
-          const team1RunRate = match.scoreTeam1.runs / (match.scoreTeam1.overs || 1);
-          const team2RunRate = match.scoreTeam2.runs / (match.scoreTeam2.overs || 1);
-          
-          team1Data.netRunRate = ((team1Data.netRunRate * (team1Data.matchesPlayed - 1)) + 
-                                 (team1RunRate - team2RunRate)) / team1Data.matchesPlayed;
-          
-          team2Data.netRunRate = ((team2Data.netRunRate * (team2Data.matchesPlayed - 1)) + 
-                                 (team2RunRate - team1RunRate)) / team2Data.matchesPlayed;
-        }
+        // TODO: Replace match.scoreTeam1 and match.scoreTeam2 usages below with data fetched from innings_summary or match_scores
+        // if (!match.scoreTeam1 || !match.scoreTeam2) return;
+        // if (match.scoreTeam1.runs > match.scoreTeam2.runs) { ... }
+        // ...
+        // Example: Use a function like getTeamScore(match.id, match.team1Id) to fetch scores
+        // ... existing code ...
       });
     
     return Object.values(leaderboard);

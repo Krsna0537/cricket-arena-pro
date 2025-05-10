@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from 'react';
 import { Player } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,6 +7,9 @@ import {
   getPlayerWithStats
 } from '@/services/api/playerService';
 import { useTeam } from './TeamContext';
+import { fetchTournaments } from '@/services/api/tournamentService';
+import { useAuth } from '@/context/AuthContext';
+import { useTournament } from './TournamentContext';
 
 interface PlayerContextType {
   addPlayer: (teamId: string, player: Omit<Player, 'id'>) => Promise<void>;
@@ -19,6 +21,8 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const { findTeam, updateTeam } = useTeam();
+  const { setTournaments } = useTournament();
+  const { user } = useAuth();
 
   const addPlayer = async (teamId: string, player: Omit<Player, 'id'>) => {
     try {
@@ -45,6 +49,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           players: [...team.players, newPlayer]
         };
         await updateTeam(updatedTeam);
+        // Re-fetch tournaments to update context with latest data
+        if (user?.id) {
+          const updatedTournaments = await fetchTournaments(user.id);
+          setTournaments(updatedTournaments);
+        }
       }
 
       toast({
