@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface NavbarProps {
   toggleSidebar?: () => void;
@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isAdmin = false }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-white shadow-sm">
+    <header className="sticky top-0 z-40 w-full border-b bg-background shadow-sm">
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-2">
           {toggleSidebar && (
@@ -40,11 +40,12 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isAdmin = false }) => {
             </Button>
           )}
           <Link to="/" className="flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-cricket-navy" />
-            <span className="text-xl font-bold text-cricket-navy">Cricket Arena Pro</span>
+            <Trophy className="h-6 w-6 text-cricket-navy dark:text-cricket-accent" />
+            <span className="text-xl font-bold text-cricket-navy dark:text-cricket-accent">Cricket Arena Pro</span>
           </Link>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {user ? (
             <>
               {userRole === 'creator' && (
@@ -99,7 +100,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isAdmin = false }) => {
           ) : (
             <>
               <Link to="/join">
-                <Button size="sm" className="bg-cricket-navy hover:bg-cricket-navy-light">Join Tournament</Button>
+                <Button size="sm" className="bg-cricket-navy hover:bg-cricket-navy-light dark:bg-cricket-accent dark:text-black">Join Tournament</Button>
               </Link>
               <Link to="/auth/login">
                 <Button variant="outline" size="sm">Sign In</Button>

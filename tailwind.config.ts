@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -69,6 +68,10 @@ export default {
           "navy": "#0D2149",
           "navy-light": "#183C7E",
           "accent": "#FFD700",
+          "accent-dark": "#E6C200",
+          "dark-bg": "#121212",
+          "dark-card": "#1E1E1E",
+          "dark-border": "#333333",
         }
       },
       borderRadius: {
@@ -106,5 +109,5 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

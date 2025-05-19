@@ -9,9 +9,10 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
   const [events, setEvents] = useState<BallEvent[]>([]);
   const { toast } = useToast();
   const supabaseClient = useRef(supabase);
+  const mounted = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
+    mounted.current = true;
     
     // Initial fetch with strongly typed handler function
     const fetchEvents = async () => {
@@ -27,11 +28,12 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
         if (error) throw error;
         
         // Use a strongly typed conversion
-        if (mounted && data) {
+        if (mounted.current && data) {
           const mappedEvents: BallEvent[] = (data as BallEventRow[]).map(mapRowToBallEvent);
           setEvents(mappedEvents);
         }
       } catch (error: any) {
+        console.error('[LiveScoring] Error fetching ball events:', error);
         toast({ 
           title: 'Error', 
           description: 'Failed to fetch ball events: ' + error.message, 
@@ -49,18 +51,43 @@ export function useLiveBallEvents(matchId: string, inning: number): BallEvent[] 
       .channel('ball-by-ball-live')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'ball_by_ball', filter: `match_id=eq.${matchId}` },
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'ball_by_ball', 
+          filter: `match_id=eq.${matchId}` 
+        },
         (payload: PayloadType) => {
-          if (payload.new && payload.new.inning === inning && mounted) {
+          if (payload.new && payload.new.inning === inning && mounted.current) {
             const newEvent = mapRowToBallEvent(payload.new);
-            setEvents(prev => [...prev, newEvent]);
+            setEvents(prev => {
+              // Check if event already exists to prevent duplicates
+              const exists = prev.some(e => 
+                e.over === newEvent.over && 
+                e.ball === newEvent.ball && 
+                e.inning === newEvent.inning
+              );
+              if (exists) return prev;
+              return [...prev, newEvent];
+            });
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[LiveScoring] Successfully subscribed to ball events');
+        } else {
+          console.error('[LiveScoring] Failed to subscribe to ball events:', status);
+          toast({
+            title: 'Connection Error',
+            description: 'Failed to establish real-time connection. Please refresh the page.',
+            variant: 'destructive'
+          });
+        }
+      });
     
     return () => {
-      mounted = false;
+      mounted.current = false;
       supabaseClient.current.removeChannel(channel);
     };
   }, [matchId, inning, toast]);

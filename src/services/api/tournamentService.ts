@@ -48,17 +48,7 @@ export async function fetchTournaments(userId: string): Promise<Tournament[]> {
       venue: match.venue,
       status: match.status,
       result: match.result ?? undefined,
-      overs: match.overs,
-      scoreTeam1: match.scoreTeam1 ? {
-        runs: match.scoreTeam1.runs || 0,
-        wickets: match.scoreTeam1.wickets || 0,
-        overs: match.scoreTeam1.overs || 0
-      } : undefined,
-      scoreTeam2: match.scoreTeam2 ? {
-        runs: match.scoreTeam2.runs || 0,
-        wickets: match.scoreTeam2.wickets || 0,
-        overs: match.scoreTeam2.overs || 0
-      } : undefined
+      overs: match.overs
     })),
   }));
 

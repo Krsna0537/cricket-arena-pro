@@ -1,19 +1,26 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import TournamentForm from '@/components/tournaments/TournamentForm';
+import TournamentFilter from '@/components/tournaments/TournamentFilter';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Calendar, Plus, Trophy, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import config from '@/lib/config';
+import { Tournament, TournamentFilters } from '@/types';
 
 const DashboardPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<TournamentFilters>({
+    search: '',
+    status: '',
+    format: '',
+  });
   const { tournaments, addTournament } = useApp();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -34,6 +41,34 @@ const DashboardPage = () => {
       console.error('Failed to create tournament:', error);
     }
   };
+
+  const statusOptions = [
+    { label: 'Upcoming', value: 'upcoming' },
+    { label: 'Ongoing', value: 'ongoing' },
+    { label: 'Completed', value: 'completed' },
+  ];
+
+  const formatOptions = [
+    { label: 'League', value: 'league' },
+    { label: 'Knockout', value: 'knockout' },
+    { label: 'Group + Knockout', value: 'group_knockout' },
+  ];
+
+  const filteredTournaments = useMemo(() => {
+    if (!tournaments) return [];
+
+    return tournaments.filter((tournament: Tournament) => {
+      const matchesSearch = !filters.search || 
+        tournament.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        (tournament.description && tournament.description.toLowerCase().includes(filters.search.toLowerCase())) ||
+        (tournament.location && tournament.location.toLowerCase().includes(filters.search.toLowerCase()));
+      
+      const matchesStatus = !filters.status || tournament.status === filters.status;
+      const matchesFormat = !filters.format || tournament.format === filters.format;
+
+      return matchesSearch && matchesStatus && matchesFormat;
+    });
+  }, [tournaments, filters]);
   
   // Calculate aggregate stats safely with null checks
   const totalTeams = tournaments ? tournaments.reduce((acc, t) => acc + (t.teams?.length || 0), 0) : 0;
@@ -92,7 +127,7 @@ const DashboardPage = () => {
         </div>
         <Button 
           onClick={() => setShowCreateForm(!showCreateForm)} 
-          className="bg-cricket-navy hover:bg-cricket-navy-light"
+          className="bg-cricket-navy hover:bg-cricket-navy-light dark:bg-cricket-accent dark:text-black dark:hover:bg-cricket-accent-dark"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create Tournament
@@ -105,9 +140,15 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {tournaments && tournaments.length > 0 ? (
+      <TournamentFilter
+        onFilter={setFilters}
+        statusOptions={statusOptions}
+        formatOptions={formatOptions}
+      />
+
+      {filteredTournaments.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tournaments.map((tournament) => (
+          {filteredTournaments.map((tournament) => (
             <TournamentCard
               key={tournament.id}
               tournament={tournament}
@@ -118,51 +159,55 @@ const DashboardPage = () => {
       ) : (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Welcome to Cricket Arena Pro</CardTitle>
+            <CardTitle>No tournaments found</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>You haven't created any tournaments yet. Click the button above to get started.</p>
+            {tournaments && tournaments.length > 0 ? (
+              <p>No tournaments match your current filters. Try changing or resetting the filters.</p>
+            ) : (
+              <p>You haven't created any tournaments yet. Click the button above to get started.</p>
+            )}
           </CardContent>
         </Card>
       )}
 
-      <Card className="bg-cricket-navy/5 border-cricket-navy/20">
+      <Card className="bg-cricket-navy/5 border-cricket-navy/20 dark:bg-cricket-navy/20">
         <CardHeader>
-          <CardTitle className="text-cricket-navy">Quick Stats</CardTitle>
+          <CardTitle className="text-cricket-navy dark:text-cricket-accent">Quick Stats</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+            <div className="text-center p-4 bg-white dark:bg-cricket-dark-card rounded-lg shadow-sm">
               <p className="text-3xl font-bold">{tournaments ? tournaments.length : 0}</p>
-              <p className="text-sm text-gray-500">Tournaments</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Tournaments</p>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+            <div className="text-center p-4 bg-white dark:bg-cricket-dark-card rounded-lg shadow-sm">
               <p className="text-3xl font-bold">{totalTeams}</p>
-              <p className="text-sm text-gray-500">Teams</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Teams</p>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+            <div className="text-center p-4 bg-white dark:bg-cricket-dark-card rounded-lg shadow-sm">
               <p className="text-3xl font-bold">{totalMatches}</p>
-              <p className="text-sm text-gray-500">Matches</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Matches</p>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+            <div className="text-center p-4 bg-white dark:bg-cricket-dark-card rounded-lg shadow-sm">
               <p className="text-3xl font-bold">{liveTournaments}</p>
-              <p className="text-sm text-gray-500">Live Tournaments</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Live Tournaments</p>
             </div>
           </div>
           
           {totalMatches > 0 && (
             <div className="grid grid-cols-3 gap-4 mt-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-xl font-bold text-blue-700">{upcomingMatches}</p>
-                <p className="text-sm text-blue-600">Upcoming</p>
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                <p className="text-xl font-bold text-blue-700 dark:text-blue-400">{upcomingMatches}</p>
+                <p className="text-sm text-blue-600 dark:text-blue-300">Upcoming</p>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-100">
-                <p className="text-xl font-bold text-red-700">{liveMatches}</p>
-                <p className="text-sm text-red-600">Live</p>
+              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30">
+                <p className="text-xl font-bold text-red-700 dark:text-red-400">{liveMatches}</p>
+                <p className="text-sm text-red-600 dark:text-red-300">Live</p>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-100">
-                <p className="text-xl font-bold text-green-700">{completedMatches}</p>
-                <p className="text-sm text-green-600">Completed</p>
+              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900/30">
+                <p className="text-xl font-bold text-green-700 dark:text-green-400">{completedMatches}</p>
+                <p className="text-sm text-green-600 dark:text-green-300">Completed</p>
               </div>
             </div>
           )}

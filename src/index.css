@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -44,6 +43,45 @@
     --sidebar-border: 210 100% 20%;
     --sidebar-ring: 210 100% 40%;
   }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 9.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 100% 35%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 140 55% 30%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar-background: 210 100% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 100% 20%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 45 100% 50%;
+    --sidebar-accent-foreground: 210 100% 5%;
+    --sidebar-border: 210 100% 15%;
+    --sidebar-ring: 210 100% 25%;
+  }
   
   * {
     @apply border-border;
@@ -55,7 +93,7 @@
   }
 
   .glass-card {
-    @apply backdrop-blur-sm bg-white/80 shadow-lg border border-white/20;
+    @apply backdrop-blur-sm bg-white/80 dark:bg-black/40 shadow-lg border border-white/20 dark:border-white/10;
   }
 
   .cricket-gradient {
@@ -81,10 +119,10 @@
   }
 
   .cricket-card {
-    @apply rounded-lg shadow-md border border-gray-100 bg-white hover:shadow-lg transition-shadow duration-300;
+    @apply rounded-lg shadow-md border border-gray-100 dark:border-cricket-dark-border bg-white dark:bg-cricket-dark-card hover:shadow-lg transition-shadow duration-300;
   }
 
   .stats-card {
-    @apply rounded-lg p-4 bg-gradient-to-br from-white to-gray-50 shadow-md border border-gray-100;
+    @apply rounded-lg p-4 bg-gradient-to-br from-white to-gray-50 dark:from-cricket-dark-card dark:to-cricket-dark-bg shadow-md border border-gray-100 dark:border-cricket-dark-border;
   }
 }

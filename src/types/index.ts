@@ -162,3 +162,50 @@ export interface MatchFromDB {
   toss_decision: 'bat' | 'bowl' | null;
   // Removed scoreTeam1 and scoreTeam2. Fetch scores from innings_summary or match_scores instead.
 }
+
+export * from './tournament';
+
+// User and authentication types
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  first_name?: string;
+  last_name?: string;
+  profile_picture?: string;
+  phone?: string;
+  created_at: string;
+}
+
+// Common application types
+export interface AppConfig {
+  app: {
+    name: string;
+    version: string;
+  };
+  api: {
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+    timeout: number;
+  };
+  tournaments: {
+    maxTeams: number;
+    maxPlayersPerTeam: number;
+    defaultOvers: number;
+  };
+  pagination: {
+    defaultLimit: number;
+  };
+  features: {
+    enableScoring: boolean;
+    enableLiveUpdates: boolean;
+    enableExport: boolean;
+    enableTeamLogos: boolean;
+  };
+}
+
+// Import/Export types
+export interface ImportResult {
+  success: boolean;
+  message?: string;
+  count?: number;
+}

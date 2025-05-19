@@ -1,4 +1,5 @@
 import { Player, Match, BallEvent, BallEventType } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 // Define the props interface for clarity and type safety
 interface RunHandlersProps {
@@ -83,6 +84,40 @@ export function useRunHandlers({
       });
       
       console.log('[LiveScoring] addBallEvent success');
+
+      // Update innings summary
+      const { data: existingSummary, error: fetchError } = await supabase
+        .from('innings_summary')
+        .select('*')
+        .eq('match_id', match.id)
+        .eq('batting_team_id', battingTeamId)
+        .single();
+
+      if (fetchError) {
+        console.error('[LiveScoring] Error fetching innings summary:', fetchError);
+        throw fetchError;
+      }
+
+      const totalRuns = runs + extras;
+      const updatedSummary = {
+        ...existingSummary,
+        total_runs: (existingSummary?.total_runs || 0) + totalRuns,
+        overs: overNum + (ballNum / 10)
+      };
+
+      const { error: updateError } = await supabase
+        .from('innings_summary')
+        .upsert(updatedSummary);
+
+      if (updateError) {
+        console.error('[LiveScoring] Error updating innings summary:', updateError);
+        throw updateError;
+      }
+
+      // Update match status if needed
+      const updatedMatch = { ...match };
+      onUpdateScore(updatedMatch);
+      
     } catch (e) {
       console.error('[LiveScoring] addBallEvent error', e);
       throw e;
@@ -104,15 +139,6 @@ export function useRunHandlers({
       players.setStriker(players.nonStriker);
       players.setNonStriker(temp);
     }
-    
-    // Auto-update match score
-    const updatedMatch = {...match};
-    if (inning === 1) {
-      // NOTE: Removed logic updating match.scoreTeam1. Update the relevant row in innings_summary or match_scores instead.
-    } else {
-      // NOTE: Removed logic updating match.scoreTeam2. Update the relevant row in innings_summary or match_scores instead.
-    }
-    onUpdateScore(updatedMatch);
   };
 
   return {

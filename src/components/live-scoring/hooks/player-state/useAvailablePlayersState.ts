@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Player, Team, BallEvent } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,7 +12,9 @@ export function useAvailablePlayersState(
   setStriker: (player: Player | null) => void,
   setNonStriker: (player: Player | null) => void,
   setBowler: (player: Player | null) => void,
-  setShowPlayerSelect: (show: boolean) => void
+  setShowPlayerSelect: (show: boolean) => void,
+  previousBowlerId: string | null = null,
+  maxOversPerBowler: number | null = null
 ) {
   const { toast } = useToast();
   
@@ -25,12 +26,41 @@ export function useAvailablePlayersState(
     async function fetchAndSetData() {
       try {
         // Set available players for this innings
+        let bowlers: Player[] = [];
+        if (inning === 1 && team2) {
+          bowlers = team2.players;
+        } else if (inning === 2 && team1) {
+          bowlers = team1.players;
+        }
+        // Only allow bowlers and all-rounders
+        bowlers = bowlers.filter(p => p.role === 'bowler' || p.role === 'all-rounder');
+
+        // Exclude previous over's bowler (no consecutive overs)
+        if (previousBowlerId) {
+          bowlers = bowlers.filter(p => p.id !== previousBowlerId);
+        }
+
+        // Enforce max overs per bowler if set
+        if (maxOversPerBowler !== null) {
+          // Count overs bowled by each player
+          const bowlerOverCount: Record<string, number> = {};
+          events.forEach(e => {
+            if (e.bowlerId && !['wide', 'no-ball'].includes(e.eventType)) {
+              if (!bowlerOverCount[e.bowlerId]) bowlerOverCount[e.bowlerId] = 0;
+              // Count only the first ball of each over for each bowler
+              if (e.ball === 1) bowlerOverCount[e.bowlerId] += 1;
+            }
+          });
+          bowlers = bowlers.filter(p => (bowlerOverCount[p.id] || 0) < maxOversPerBowler);
+        }
+
+        setAvailableBowlers(bowlers);
+
+        // Set available batsmen
         if (inning === 1 && team1) {
           setAvailableBatsmen([...team1.players]);
-          setAvailableBowlers(team2?.players || []);
         } else if (inning === 2 && team2) {
           setAvailableBatsmen([...team2.players]);
-          setAvailableBowlers(team1?.players || []);
         }
         
         // Check if there are existing events to determine if we should show player select
@@ -89,7 +119,7 @@ export function useAvailablePlayersState(
     }
     
     fetchAndSetData();
-  }, [inning, team1, team2, match.id, toast, setStriker, setNonStriker, setBowler, setShowPlayerSelect]);
+  }, [inning, team1, team2, match.id, toast, setStriker, setNonStriker, setBowler, setShowPlayerSelect, previousBowlerId, maxOversPerBowler, events]);
 
   // Remove out batsman from available batsmen
   const updateAvailableBatsmenAfterWicket = (outBatsmanId: string) => {
