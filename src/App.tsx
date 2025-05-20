@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import DashboardPage from "@/pages/admin/DashboardPage";
 import TournamentDetailPage from "@/pages/admin/TournamentDetailPage";
 import JoinTournamentPage from "@/pages/JoinTournamentPage";
 import PublicTournamentView from "@/pages/public/PublicTournamentView";
+import ContactPage from "@/pages/ContactPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +32,7 @@ const App = () => (
               {/* Public Routes */}
               <Route path="/" element={<Layout />}>
                 <Route index element={<HomePage />} />
+                <Route path="contact" element={<ContactPage />} />
               </Route>
 
               {/* Auth Routes */}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
@@ -16,13 +15,11 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin = false }) => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col w-full">
       <Navbar toggleSidebar={toggleSidebar} isAdmin={isAdmin} />
       {isAdmin && <Sidebar isSidebarOpen={isSidebarOpen} />}
-      <main className={`flex-1 ${isAdmin && isSidebarOpen ? 'md:ml-64' : ''}`}>
-        <div className="container mx-auto p-4 md:p-6">
-          <Outlet />
-        </div>
+      <main className={`flex-1 w-full ${isAdmin && isSidebarOpen ? 'md:ml-64' : ''}`}>
+        <Outlet />
       </main>
     </div>
   );
